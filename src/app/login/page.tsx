@@ -153,7 +153,7 @@ export default function Login() {
               </Button>
 
               <p className="text-center text-gray-400 mt-6">
-                Don't have an account?{" "}
+                Don&apos;t have an account?{" "}
                 <Link href="/signup" className="text-twitch hover:underline">
                   Sign Up
                 </Link>
