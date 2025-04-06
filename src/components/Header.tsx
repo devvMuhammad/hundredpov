@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Twitch } from "lucide-react";
+import Link from "next/link";
 
 const Header = () => {
   return (
@@ -11,10 +12,11 @@ const Header = () => {
           <span className="font-bold text-xl text-white">PUBG Central</span>
         </div>
         <nav className="hidden md:flex items-center space-x-6">
-          <a href="#features" className="text-sm text-gray-300 hover:text-white transition-colors">Features</a>
-          <a href="#streams" className="text-sm text-gray-300 hover:text-white transition-colors">Streams</a>
-          <a href="#rankings" className="text-sm text-gray-300 hover:text-white transition-colors">Rankings</a>
-          <a href="#community" className="text-sm text-gray-300 hover:text-white transition-colors">Community</a>
+          <Link href="#features" className="text-sm text-gray-300 hover:text-white transition-colors">Features</Link>
+          <Link href="#streams" className="text-sm text-gray-300 hover:text-white transition-colors">Streams</Link>
+          <Link href="#rankings" className="text-sm text-gray-300 hover:text-white transition-colors">Rankings</Link>
+          <Link href="#community" className="text-sm text-gray-300 hover:text-white transition-colors">Community</Link>
+          <Link href="/lobby" className="text-sm text-gray-300 hover:text-white transition-colors">Lobby</Link>
         </nav>
         <div className="flex items-center space-x-4">
           <Button variant="ghost" className="text-gray-300 hover:text-white">Login</Button>
