@@ -1,18 +1,43 @@
 "use client";
-
 import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link"
 import {
   ArrowLeft, Globe, Monitor, Gamepad2, Smartphone,
   User, Users, Clock, Twitch, MapPin,
-  CircleDot, UserRound, CircleDashed
+  CircleDot, UserRound, CircleDashed, MoreVertical,
+  PlayCircle, StopCircle, ArrowRightLeft, MoveRight, Trash2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import Link from "next/link";
-import { useParams } from "next/navigation";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogClose
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // Types for our game
 type MatchMode = "Solo" | "Duo" | "Squad";
@@ -33,10 +58,12 @@ interface Team {
   players: Player[];
   isFilled: boolean;
 }
-
-const Game = () => {
-  const { id } = useParams<{ id: string }>();
+export default function Game() {
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [heroMode] = useState(true); // Host powers enabled
 
   // Mock game data
   const [gameData, setGameData] = useState<{
@@ -58,6 +85,11 @@ const Game = () => {
     teams: Team[];
   } | null>(null);
 
+  // Dialog and action states
+  const [swapDialogOpen, setSwapDialogOpen] = useState(false);
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  const [selectedTeamIndex, setSelectedTeamIndex] = useState<number | null>(null);
+
   useEffect(() => {
     // Simulate fetching game data
     setTimeout(() => {
@@ -67,6 +99,81 @@ const Game = () => {
       setLoading(false);
     }, 1000);
   }, [id]);
+
+  // Handle game status changes
+  const handleStartGame = () => {
+    if (gameData) {
+      setGameData({
+        ...gameData,
+        status: "ongoing"
+      });
+    }
+  };
+
+  const handleEndGame = () => {
+    if (gameData) {
+      setGameData({
+        ...gameData,
+        status: "completed"
+      });
+    }
+  };
+
+  // Team management actions
+  const handleSwapTeam = (fromIndex: number, toIndex: number) => {
+    if (gameData) {
+      const newTeams = [...gameData.teams];
+      const temp = newTeams[fromIndex];
+      newTeams[fromIndex] = newTeams[toIndex];
+      newTeams[toIndex] = temp;
+
+      setGameData({
+        ...gameData,
+        teams: newTeams
+      });
+      setSwapDialogOpen(false);
+    }
+  };
+
+  const handleMoveTeam = (fromIndex: number, toIndex: number) => {
+    if (gameData && fromIndex !== toIndex) {
+      const newTeams = [...gameData.teams];
+      const movingTeam = { ...newTeams[fromIndex] };
+
+      // Create an empty team for the original position
+      newTeams[fromIndex] = {
+        id: `team-${fromIndex}`,
+        players: [],
+        isFilled: false
+      };
+
+      // Move team to new position
+      newTeams[toIndex] = movingTeam;
+
+      setGameData({
+        ...gameData,
+        teams: newTeams
+      });
+      setMoveDialogOpen(false);
+    }
+  };
+
+  const handleRemoveTeam = (index: number) => {
+    if (gameData) {
+      const newTeams = [...gameData.teams];
+      newTeams[index] = {
+        id: `team-${index}`,
+        players: [],
+        isFilled: false
+      };
+
+      setGameData({
+        ...gameData,
+        teams: newTeams,
+        currentPlayers: gameData.currentPlayers - (gameData.mode === "Solo" ? 1 : gameData.mode === "Duo" ? 2 : 4)
+      });
+    }
+  };
 
   // Generate mock player data
   const generateMockGameData = (gameId: string) => {
@@ -181,6 +288,9 @@ const Game = () => {
     );
   }
 
+  const filledTeams = gameData.teams.filter(team => team.isFilled);
+  const emptyTeams = gameData.teams.filter(team => !team.isFilled);
+
   return (
     <div className="min-h-screen bg-gaming-darker text-white pt-20 pb-12">
       <div className="container mx-auto px-4">
@@ -192,14 +302,95 @@ const Game = () => {
           </Link>
           <div className="flex justify-between items-center">
             <h1 className="text-2xl md:text-3xl font-bold">{gameData.name}</h1>
-            {getStatusIndicator(gameData.status)}
+            <div className="flex items-center gap-3">
+              {getStatusIndicator(gameData.status)}
+
+              {/* Host controls */}
+              {heroMode && (
+                <>
+                  {gameData.status === "open" && (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700"
+                      onClick={handleStartGame}
+                    >
+                      <PlayCircle className="h-4 w-4 mr-1" />
+                      Start Match
+                    </Button>
+                  )}
+
+                  {gameData.status === "ongoing" && (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="bg-red-600 hover:bg-red-700"
+                      onClick={handleEndGame}
+                    >
+                      <StopCircle className="h-4 w-4 mr-1" />
+                      End Match
+                    </Button>
+                  )}
+
+                  {gameData.status === "completed" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push('/host-game')}
+                    >
+                      Host New Match
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Game info and host section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {/* Host details card */}
+          <Card className="border-pubg/20 bg-gaming-light hover:border-pubg/40 transition-colors md:order-1">
+            <CardHeader className="pb-2 border-b border-gaming-darker/30">
+              <CardTitle className="text-base text-white flex items-center gap-2">
+                <UserRound className="h-5 w-5 text-pubg" />
+                Host Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="p-4 bg-gradient-to-b from-gaming-darker/5 to-gaming-darker/15">
+                <div className="flex flex-col items-center gap-4">
+                  <Avatar className="h-20 w-20 border-2 border-pubg ring-2 ring-pubg/30 ring-offset-2 ring-offset-gaming-darker">
+                    <AvatarImage src={gameData.host.avatarUrl} alt={gameData.host.name} />
+                    <AvatarFallback className="bg-pubg text-white">{gameData.host.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div className="text-center">
+                    <p className="font-bold text-xl text-white">{gameData.host.name}</p>
+                    <Badge variant="outline" className="mt-2 bg-gaming-darker/40 border-pubg/40 text-pubg">
+                      {gameData.host.rank} Rank
+                    </Badge>
+                    {heroMode && (
+                      <Badge variant="outline" className="mt-2 ml-2 bg-pubg/20 border-pubg text-white">
+                        Host
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 bg-gradient-to-b from-transparent to-pubg/5">
+                <Button
+                  variant="default"
+                  className="w-full bg-pubg hover:bg-pubg-dark text-white"
+                >
+                  <Twitch className="h-4 w-4 mr-2" />
+                  View Host Profile
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Match details card */}
-          <Card className="border-pubg/20 bg-gaming-light md:col-span-2 hover:border-pubg/40 transition-colors">
+          <Card className="border-pubg/20 bg-gaming-light md:col-span-2 hover:border-pubg/40 transition-colors md:order-2">
             <CardHeader className="pb-2 border-b border-gaming-darker/30">
               <CardTitle className="text-base text-white flex items-center gap-2">
                 <Globe className="h-5 w-5 text-pubg" />
@@ -255,41 +446,6 @@ const Game = () => {
               </div>
             </CardContent>
           </Card>
-
-          {/* Host details card */}
-          <Card className="border-pubg/20 bg-gaming-light hover:border-pubg/40 transition-colors">
-            <CardHeader className="pb-2 border-b border-gaming-darker/30">
-              <CardTitle className="text-base text-white flex items-center gap-2">
-                <UserRound className="h-5 w-5 text-pubg" />
-                Host Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="p-4 bg-gaming-darker/10">
-                <div className="flex flex-col items-center gap-4">
-                  <Avatar className="h-16 w-16 border-2 border-pubg">
-                    <AvatarImage src={gameData.host.avatarUrl} alt={gameData.host.name} />
-                    <AvatarFallback className="bg-pubg text-white">{gameData.host.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                  <div className="text-center">
-                    <p className="font-bold text-lg text-white">{gameData.host.name}</p>
-                    <Badge variant="outline" className="mt-1 bg-gaming-darker/40 border-pubg/40 text-pubg">
-                      {gameData.host.rank} Rank
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 bg-gradient-to-b from-transparent to-pubg/5">
-                <Button
-                  variant="default"
-                  className="w-full bg-pubg hover:bg-pubg-dark text-white"
-                >
-                  <Twitch className="h-4 w-4 mr-2" />
-                  View Host Profile
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Teams section */}
@@ -301,40 +457,221 @@ const Game = () => {
               'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
             }`}>
             {gameData.teams.map((team, index) => (
-              <TeamCard key={team.id} team={team} mode={gameData.mode} teamNumber={index + 1} />
+              <TeamCard
+                key={team.id}
+                team={team}
+                mode={gameData.mode}
+                teamNumber={index + 1}
+                heroMode={heroMode}
+                onSelectTeam={() => setSelectedTeamIndex(index)}
+                onSwapTeam={() => {
+                  setSelectedTeamIndex(index);
+                  setSwapDialogOpen(true);
+                }}
+                onMoveTeam={() => {
+                  setSelectedTeamIndex(index);
+                  setMoveDialogOpen(true);
+                }}
+                onRemoveTeam={() => handleRemoveTeam(index)}
+              />
             ))}
           </div>
         </div>
+
+        {/* Swap Team Dialog */}
+        <Dialog open={swapDialogOpen} onOpenChange={setSwapDialogOpen}>
+          <DialogContent className="bg-gaming-light border-pubg/30 max-w-md max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-white">Swap Team Position</DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Select a team to swap positions with Team {selectedTeamIndex !== null ? selectedTeamIndex + 1 : ''}
+              </DialogDescription>
+            </DialogHeader>
+
+            {filledTeams.length > 1 ? (
+              <div className="grid gap-2 py-4">
+                {filledTeams.map((team) => {
+                  const indexInOriginalArray = gameData.teams.findIndex(t => t.id === team.id);
+                  if (indexInOriginalArray === selectedTeamIndex) return null;
+
+                  return (
+                    <Button
+                      key={team.id}
+                      variant="outline"
+                      className="justify-start h-auto py-3 hover:bg-gaming-darker/30"
+                      onClick={() => handleSwapTeam(selectedTeamIndex!, indexInOriginalArray)}
+                    >
+                      <div className="flex items-center w-full">
+                        <div className="bg-pubg/20 text-white rounded px-2 py-1 mr-3">
+                          Team {indexInOriginalArray + 1}
+                        </div>
+                        <div className="flex-1 flex items-center gap-2">
+                          {team.players.map(player => (
+                            <Avatar key={player.id} className="h-6 w-6 border border-pubg/30">
+                              <AvatarImage src={player.avatarUrl} alt={player.name} />
+                              <AvatarFallback>{player.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                          ))}
+                        </div>
+                        <ArrowRightLeft className="h-4 w-4 text-gray-400" />
+                      </div>
+                    </Button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center py-6 text-center">
+                <CircleDashed className="h-12 w-12 text-gray-500 mb-2" />
+                <p className="text-gray-400">No other teams available to swap with</p>
+              </div>
+            )}
+
+            <DialogClose asChild>
+              <Button variant="outline" className="w-full">Cancel</Button>
+            </DialogClose>
+          </DialogContent>
+        </Dialog>
+
+        {/* Move Team Dialog */}
+        <Dialog open={moveDialogOpen} onOpenChange={setMoveDialogOpen}>
+          <DialogContent className="bg-gaming-light border-pubg/30 max-w-md max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-white">Move Team</DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Select an empty slot to move Team {selectedTeamIndex !== null ? selectedTeamIndex + 1 : ''}
+              </DialogDescription>
+            </DialogHeader>
+
+            {emptyTeams.length > 0 ? (
+              <div className="grid gap-2 py-4">
+                {emptyTeams.map((team) => {
+                  const indexInOriginalArray = gameData.teams.findIndex(t => t.id === team.id);
+
+                  return (
+                    <Button
+                      key={team.id}
+                      variant="outline"
+                      className="justify-start h-auto py-3 hover:bg-gaming-darker/30"
+                      onClick={() => handleMoveTeam(selectedTeamIndex!, indexInOriginalArray)}
+                    >
+                      <div className="flex items-center w-full">
+                        <div className="bg-gaming-darker/50 text-gray-300 rounded px-2 py-1 mr-3">
+                          Slot {indexInOriginalArray + 1}
+                        </div>
+                        <div className="flex-1 flex items-center">
+                          <span className="text-gray-400">Empty position</span>
+                        </div>
+                        <MoveRight className="h-4 w-4 text-gray-400" />
+                      </div>
+                    </Button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center py-6 text-center">
+                <CircleDashed className="h-12 w-12 text-gray-500 mb-2" />
+                <p className="text-gray-400">No empty slots available</p>
+              </div>
+            )}
+
+            <DialogClose asChild>
+              <Button variant="outline" className="w-full">Cancel</Button>
+            </DialogClose>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
 };
 
 // Component for rendering a team card
-const TeamCard = ({ team, mode, teamNumber }: { team: Team; mode: MatchMode; teamNumber: number }) => {
+const TeamCard = ({
+  team,
+  mode,
+  teamNumber,
+  heroMode,
+  onSelectTeam,
+  onSwapTeam,
+  onMoveTeam,
+  onRemoveTeam
+}: {
+  team: Team;
+  mode: MatchMode;
+  teamNumber: number;
+  heroMode: boolean;
+  onSelectTeam: () => void;
+  onSwapTeam: () => void;
+  onMoveTeam: () => void;
+  onRemoveTeam: () => void;
+}) => {
   return (
-    <Card className={`border-pubg/10 ${team.isFilled ? 'bg-gaming-light' : 'bg-gaming-darker/60 border-dashed border-gaming-light/30'} overflow-hidden`}>
-      <CardHeader className="py-2 px-3 bg-gaming-darker/50">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-sm text-white">Team {teamNumber}</CardTitle>
-          {!team.isFilled && (
-            <Badge variant="outline" className="text-xs border-gaming-light/40 text-gray-400">
-              Empty
-            </Badge>
-          )}
-        </div>
+    <Card className={`border-pubg/10 relative ${team.isFilled ? 'bg-gaming-light' : 'bg-gaming-darker/60 border-dashed border-gaming-light/30'} overflow-hidden`}>
+      <CardHeader className="py-2 px-3 bg-gaming-darker/50 flex flex-row justify-between items-center">
+        <CardTitle className="text-sm text-white">Team {teamNumber}</CardTitle>
+        {!team.isFilled ? (
+          <Badge variant="outline" className="text-xs border-gaming-light/40 text-gray-400">
+            Empty
+          </Badge>
+        ) : heroMode && (
+          <DropdownMenu>
+            <DropdownMenuTrigger className="h-6 w-6 rounded-full hover:bg-gaming-darker/50 flex items-center justify-center">
+              <MoreVertical className="h-4 w-4 text-gray-400" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="bg-gaming-darker border-pubg/20 text-white">
+              <DropdownMenuItem className="hover:bg-gaming-light/20 cursor-pointer" onClick={onSwapTeam}>
+                <ArrowRightLeft className="h-4 w-4 mr-2" />
+                Swap Position
+              </DropdownMenuItem>
+              <DropdownMenuItem className="hover:bg-gaming-light/20 cursor-pointer" onClick={onMoveTeam}>
+                <MoveRight className="h-4 w-4 mr-2" />
+                Move to Empty Slot
+              </DropdownMenuItem>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <DropdownMenuItem
+                    className="hover:bg-red-900/30 text-red-400 cursor-pointer"
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      onSelectTeam();
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Remove Team
+                  </DropdownMenuItem>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="bg-gaming-light border-pubg/30">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-white">Remove Team</AlertDialogTitle>
+                    <AlertDialogDescription className="text-gray-400">
+                      Are you sure you want to remove <strong>Team {teamNumber}</strong>? This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="bg-transparent text-white border-gaming-light/30 hover:bg-gaming-darker/50">Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-red-700 text-white hover:bg-red-800"
+                      onClick={onRemoveTeam}
+                    >
+                      Remove
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </CardHeader>
       <CardContent className="p-0">
         {team.isFilled ? (
-          <div className={`grid ${mode === 'Squad' ? 'grid-cols-2' : 'grid-cols-1'} gap-px bg-gaming-darker/30`}>
+          <div className={`${mode === 'Squad' ? 'grid grid-cols-2 gap-px bg-gaming-darker/30' : ''}`}>
             {team.players.map((player) => (
-              <PlayerCard key={player.id} player={player} />
+              <PlayerCard key={player.id} player={player} mode={mode} />
             ))}
           </div>
         ) : (
           <div className="p-4 flex flex-col items-center justify-center space-y-2 text-center">
             <CircleDashed className="h-6 w-6 text-gray-500 animate-pulse" />
-            <p className="text-xs text-gray-400">Waiting for players</p>
+            <p className="text-xs text-gray-400">Waiting</p>
           </div>
         )}
       </CardContent>
@@ -343,21 +680,20 @@ const TeamCard = ({ team, mode, teamNumber }: { team: Team; mode: MatchMode; tea
 };
 
 // Component for rendering a player card
-const PlayerCard = ({ player }: { player: Player }) => {
-
+const PlayerCard = ({ player }: { player: Player; mode: MatchMode }) => {
   return (
     <HoverCard>
       <HoverCardTrigger asChild>
-        <div className="p-2 bg-gaming-light cursor-pointer hover:bg-pubg/10 transition-colors">
-          <a
-            href={`https://twitch.tv/${player.twitchName}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block"
-          >
+        <a
+          href={`https://twitch.tv/${player.twitchName}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block"
+        >
+          <div className="p-2 bg-gaming-light cursor-pointer hover:bg-pubg/10 transition-colors">
             <PlayerCardContent player={player} />
-          </a>
-        </div>
+          </div>
+        </a>
       </HoverCardTrigger>
       <HoverCardContent className="w-80 bg-gaming-darker border-pubg/20 p-0 overflow-hidden">
         <div className="p-4">
@@ -407,4 +743,3 @@ const PlayerCardContent = ({ player }: { player: Player }) => {
   );
 };
 
-export default Game;

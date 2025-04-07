@@ -3,7 +3,7 @@ import { TwitchIcon, Github, Twitter, Youtube, Instagram } from "lucide-react";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
-  
+
   return (
     <footer className="bg-gaming-darker pt-12 pb-6 border-t border-pubg/10">
       <div className="container mx-auto px-4 md:px-6">
@@ -34,7 +34,7 @@ const Footer = () => {
               </a>
             </div>
           </div>
-          
+
           <div>
             <h3 className="text-white font-semibold mb-4">Resources</h3>
             <ul className="space-y-2">
@@ -44,7 +44,7 @@ const Footer = () => {
               <li><a href="#" className="text-gray-400 hover:text-pubg transition-colors">Community Guidelines</a></li>
             </ul>
           </div>
-          
+
           <div>
             <h3 className="text-white font-semibold mb-4">Company</h3>
             <ul className="space-y-2">
@@ -54,7 +54,7 @@ const Footer = () => {
               <li><a href="#" className="text-gray-400 hover:text-pubg transition-colors">Press Kit</a></li>
             </ul>
           </div>
-          
+
           <div>
             <h3 className="text-white font-semibold mb-4">Legal</h3>
             <ul className="space-y-2">
@@ -65,10 +65,10 @@ const Footer = () => {
             </ul>
           </div>
         </div>
-        
+
         <div className="pt-6 border-t border-gray-800 text-center text-gray-500 text-sm">
           <p>© {currentYear} PUBG Central. All rights reserved. Not affiliated with PUBG Corp or Twitch.</p>
-          <p className="mt-1">PLAYERUNKNOWN'S BATTLEGROUNDS and PUBG are registered trademarks, trademarks or service marks of KRAFTON.</p>
+          <p className="mt-1">PLAYERUNKNOWN&apos;S BATTLEGROUNDS and PUBG are registered trademarks, trademarks or service marks of KRAFTON.</p>
         </div>
       </div>
     </footer>

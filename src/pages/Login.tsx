@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { Twitch, EyeOff, Eye, Mail, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +29,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -53,7 +53,7 @@ const Login = () => {
       <div className="hidden md:block md:w-1/2 bg-gaming-dark">
         <TestimonialsSection />
       </div>
-      
+
       {/* Right side - Login Form */}
       <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-8">
         <div className="w-full max-w-md">
@@ -61,10 +61,10 @@ const Login = () => {
             <Twitch className="h-6 w-6 text-twitch" />
             <span className="font-bold text-xl text-white">PUBG Central</span>
           </div>
-          
+
           <h1 className="text-3xl font-bold text-white mb-2">Welcome back</h1>
           <p className="text-gray-400 mb-8">Log in to access your personalized dashboard</p>
-          
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
@@ -78,10 +78,10 @@ const Login = () => {
                         <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                           <Mail className="h-5 w-5 text-gray-400" />
                         </div>
-                        <Input 
-                          placeholder="Enter your email" 
-                          className="pl-10 bg-gaming-light border-gaming-light text-white" 
-                          {...field} 
+                        <Input
+                          placeholder="Enter your email"
+                          className="pl-10 bg-gaming-light border-gaming-light text-white"
+                          {...field}
                         />
                       </div>
                     </FormControl>
@@ -89,7 +89,7 @@ const Login = () => {
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="password"
@@ -101,13 +101,13 @@ const Login = () => {
                         <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                           <Lock className="h-5 w-5 text-gray-400" />
                         </div>
-                        <Input 
-                          type={showPassword ? "text" : "password"} 
-                          placeholder="Enter your password" 
-                          className="pl-10 bg-gaming-light border-gaming-light text-white" 
-                          {...field} 
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Enter your password"
+                          className="pl-10 bg-gaming-light border-gaming-light text-white"
+                          {...field}
                         />
-                        <button 
+                        <button
                           type="button"
                           className="absolute right-3 top-1/2 transform -translate-y-1/2"
                           onClick={() => setShowPassword(!showPassword)}
@@ -124,7 +124,7 @@ const Login = () => {
                   </FormItem>
                 )}
               />
-              
+
               <div className="flex items-center justify-between">
                 <FormField
                   control={form.control}
@@ -132,28 +132,28 @@ const Login = () => {
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center space-x-2 space-y-0">
                       <FormControl>
-                        <Checkbox 
-                          checked={field.value} 
-                          onCheckedChange={field.onChange} 
-                          className="data-[state=checked]:bg-twitch" 
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="data-[state=checked]:bg-twitch"
                         />
                       </FormControl>
                       <FormLabel className="text-gray-300 font-normal">Remember me</FormLabel>
                     </FormItem>
                   )}
                 />
-                <Link to="#" className="text-twitch text-sm hover:underline">
+                <Link href="#" className="text-twitch text-sm hover:underline">
                   Forgot password?
                 </Link>
               </div>
-              
+
               <Button type="submit" className="w-full glow-button">
                 Sign In
               </Button>
-              
+
               <p className="text-center text-gray-400 mt-6">
-                Don't have an account?{" "}
-                <Link to="/signup" className="text-twitch hover:underline">
+                Don&apos;t have an account?{" "}
+                <Link href="/signup" className="text-twitch hover:underline">
                   Sign Up
                 </Link>
               </p>
