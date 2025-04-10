@@ -1,7 +1,6 @@
-
-import { Button } from "@/components/ui/button";
 import { Twitch } from "lucide-react";
 import Link from "next/link";
+import UserAvatar from "./UserAvatar";
 
 const Header = () => {
   return (
@@ -18,10 +17,7 @@ const Header = () => {
           <Link href="#community" className="text-sm text-gray-300 hover:text-white transition-colors">Community</Link>
           <Link href="/lobby" className="text-sm text-gray-300 hover:text-white transition-colors">Lobby</Link>
         </nav>
-        <div className="flex items-center space-x-4">
-          <Button variant="ghost" className="text-gray-300 hover:text-white">Login</Button>
-          <Button className="bg-pubg hover:bg-pubg-light text-white">Sign Up</Button>
-        </div>
+        <UserAvatar />
       </div>
     </header>
   );

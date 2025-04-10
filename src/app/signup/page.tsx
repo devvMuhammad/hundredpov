@@ -18,7 +18,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { signup } from "@/actions/auth";
+import { handleError } from "@/lib/utils/handle-error";
 import TestimonialsSection from "@/components/TestimonialsSection";
+import { useRouter } from "next/navigation";
 
 const signupSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -50,12 +54,34 @@ export default function Signup() {
     }
   });
 
+  const router = useRouter();
+
+  const signupMutation = useMutation({
+    mutationFn: (data: SignupFormValues) => {
+      return signup({
+        name: data.username,
+        email: data.email,
+        password: data.password,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Registration failed",
+        description: handleError(error),
+        variant: "destructive",
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Account created successfully",
+        description: "You've been redirected to the home page.",
+      });
+      router.push('/');
+    },
+  });
+
   const onSubmit = (data: SignupFormValues) => {
-    console.log("Signup form submitted:", data);
-    toast({
-      title: "Registration Attempted",
-      description: "This is a demo. Registration is not yet implemented.",
-    });
+    signupMutation.mutate(data);
   };
 
   return (
@@ -223,8 +249,12 @@ export default function Signup() {
                 )}
               />
 
-              <Button type="submit" className="w-full glow-button">
-                Create Account
+              <Button
+                type="submit"
+                className="w-full glow-button"
+                disabled={signupMutation.isPending}
+              >
+                {signupMutation.isPending ? "Creating Account..." : "Create Account"}
               </Button>
 
               <p className="text-center text-gray-400 mt-6">

@@ -18,7 +18,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { login } from "@/actions/auth";
+import { handleError } from "@/lib/utils/handle-error";
 import TestimonialsSection from "@/components/TestimonialsSection";
+import { useRouter } from "next/navigation";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -30,6 +34,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -40,12 +45,31 @@ export default function Login() {
     }
   });
 
+  const loginMutation = useMutation({
+    mutationFn: (data: LoginFormValues) => {
+      return login({
+        email: data.email,
+        password: data.password,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Login failed",
+        description: handleError(error),
+        variant: "destructive",
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Login successful",
+        description: "You've been redirected to your dashboard.",
+      });
+      router.push('/lobby');
+    },
+  });
+
   const onSubmit = (data: LoginFormValues) => {
-    console.log("Login form submitted:", data);
-    toast({
-      title: "Login Attempted",
-      description: "This is a demo. Authentication is not yet implemented.",
-    });
+    loginMutation.mutate(data);
   };
 
   return (
@@ -148,8 +172,12 @@ export default function Login() {
                 </Link>
               </div>
 
-              <Button type="submit" className="w-full glow-button">
-                Sign In
+              <Button
+                type="submit"
+                className="w-full glow-button"
+                disabled={loginMutation.isPending}
+              >
+                {loginMutation.isPending ? "Signing In..." : "Sign In"}
               </Button>
 
               <p className="text-center text-gray-400 mt-6">
