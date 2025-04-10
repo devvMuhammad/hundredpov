@@ -7,9 +7,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { Twitch, Box, ArrowDown } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Icons } from "@/components/Icons";
 
 const formSchema = z.object({
   pubgUsername: z.string()
@@ -101,6 +101,26 @@ const Onboarding = () => {
 
             <FormField
               control={form.control}
+              name="twitchUsername"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-white">
+                    <span>Twitch Username (Optional)</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter your Twitch username"
+                      {...field}
+                      className="bg-gaming-darker border-pubg/30 text-white"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="platform"
               render={({ field }) => (
                 <FormItem className="space-y-3">
@@ -115,7 +135,7 @@ const Onboarding = () => {
                         <RadioGroupItem value="pc" id="pc" />
                         <label htmlFor="pc" className="flex flex-1 cursor-pointer items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <ArrowDown className="h-5 w-5 text-pubg" />
+                            <Icons.steam className="h-5 w-5 text-pubg" color="#f2a900" fill="#f2a900" />
                             <span className="text-white">PC / Steam</span>
                           </div>
                         </label>
@@ -125,7 +145,8 @@ const Onboarding = () => {
                         <RadioGroupItem value="xbox" id="xbox" />
                         <label htmlFor="xbox" className="flex flex-1 cursor-pointer items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <Box className="h-5 w-5 text-pubg" />
+                            {/* <Box className="h-5 w-5 text-pubg" /> */}
+                            <Icons.xbox className="h-5 w-5 text-pubg" color="#f2a900" fill="#f2a900" />
                             <span className="text-white">Xbox</span>
                           </div>
                         </label>
@@ -136,9 +157,7 @@ const Onboarding = () => {
                         <label htmlFor="ps4" className="flex flex-1 cursor-pointer items-center justify-between">
                           <div className="flex items-center gap-2">
                             {/* Using a different icon since PS4 is not available in lucide */}
-                            <svg className="h-5 w-5 text-pubg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M9.5 7v9.5m0 0c0 1.1-.9 2-2 2h-3a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2h3c1.1 0 2 .9 2 2v9Zm11-9h-3a2 2 0 0 0-2 2v9c0 1.1.9 2 2 2h3a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
+                            <Icons.playstation className="h-5 w-5 text-pubg" />
                             <span className="text-white">PlayStation</span>
                           </div>
                         </label>
@@ -150,28 +169,7 @@ const Onboarding = () => {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="twitchUsername"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white">
-                    <div className="flex items-center gap-2">
-                      <Twitch className="h-4 w-4 text-pubg" />
-                      <span>Twitch Username (Optional)</span>
-                    </div>
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter your Twitch username"
-                      {...field}
-                      className="bg-gaming-darker border-pubg/30 text-white"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
 
             <Button
               type="submit"

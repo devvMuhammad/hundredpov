@@ -74,9 +74,9 @@ export default function Signup() {
     onSuccess: () => {
       toast({
         title: "Account created successfully",
-        description: "You've been redirected to the home page.",
+        description: "You've been redirected to the onboarding page.",
       });
-      router.push('/');
+      router.push('/onboarding');
     },
   });
 
