@@ -1,27 +1,14 @@
 "use client";
-import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import {
   Globe, Users, User, Monitor, Gamepad2, Smartphone,
-  Trophy, Clock, Timer, CircleDot, PlusCircle
+  Trophy, Clock, Timer, CircleDot
 } from "lucide-react";
 
 const Lobby = () => {
-  const [activeTab, setActiveTab] = useState("open");
-
-  // Mock data for player stats
-  const playerStats = {
-    name: "ShroudFan123",
-    matchesPlayed: 458,
-    winRate: "12.4%",
-    killsPerMatch: 3.2,
-    avatarUrl: "https://i.pravatar.cc/150?img=32"
-  };
 
   // Mock data for matches
   const openMatches = [
@@ -257,113 +244,56 @@ const Lobby = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gaming-darker text-white pt-20 pb-12">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Game Lobby</h1>
-          <Link href="/host-game">
-            <Button className="bg-pubg hover:bg-pubg-light text-white font-medium flex items-center gap-2">
-              <PlusCircle className="h-4 w-4" />
-              Host Your Own Game
-            </Button>
-          </Link>
-        </div>
+    <div className="w-full md:w-3/4">
+      <Tabs defaultValue="open" className="w-full">
+        <TabsList className="w-full grid grid-cols-3 mb-4 bg-transparent border-b border-gaming-light">
+          <TabsTrigger
+            value="open"
+            className="bg-transparent rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-pubg data-[state=active]:text-white text-gray-400"
+          >
+            <Clock className="h-4 w-4 mr-2" />
+            Open Matches
+          </TabsTrigger>
+          <TabsTrigger
+            value="ongoing"
+            className="bg-transparent rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-pubg data-[state=active]:text-white text-gray-400"
+          >
+            <Timer className="h-4 w-4 mr-2" />
+            Live Matches
+          </TabsTrigger>
+          <TabsTrigger
+            value="completed"
+            className="bg-transparent rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-pubg data-[state=active]:text-white text-gray-400"
+          >
+            <Trophy className="h-4 w-4 mr-2" />
+            Completed
+          </TabsTrigger>
+        </TabsList>
 
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Left column - Match lists */}
-          <div className="w-full md:w-3/4">
-            <Tabs defaultValue="open" value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="w-full grid grid-cols-3 mb-4 bg-transparent border-b border-gaming-light">
-                <TabsTrigger
-                  value="open"
-                  className="bg-transparent rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-pubg data-[state=active]:text-white text-gray-400"
-                >
-                  <Clock className="h-4 w-4 mr-2" />
-                  Open Matches
-                </TabsTrigger>
-                <TabsTrigger
-                  value="ongoing"
-                  className="bg-transparent rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-pubg data-[state=active]:text-white text-gray-400"
-                >
-                  <Timer className="h-4 w-4 mr-2" />
-                  Live Matches
-                </TabsTrigger>
-                <TabsTrigger
-                  value="completed"
-                  className="bg-transparent rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-pubg data-[state=active]:text-white text-gray-400"
-                >
-                  <Trophy className="h-4 w-4 mr-2" />
-                  Completed
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="open" className="space-y-4 mt-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {openMatches.map(match => (
-                    <MatchCard key={match.id} match={match} type="open" />
-                  ))}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="ongoing" className="space-y-4 mt-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {ongoingMatches.map(match => (
-                    <MatchCard key={match.id} match={match} type="ongoing" />
-                  ))}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="completed" className="space-y-4 mt-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {completedMatches.map(match => (
-                    <MatchCard key={match.id} match={match} type="completed" />
-                  ))}
-                </div>
-              </TabsContent>
-            </Tabs>
+        <TabsContent value="open" className="space-y-4 mt-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {openMatches.map(match => (
+              <MatchCard key={match.id} match={match} type="open" />
+            ))}
           </div>
+        </TabsContent>
 
-          {/* Right column - Player stats card */}
-          <div className="w-full md:w-1/4 mt-6 md:mt-0">
-            <Card className="border-pubg/20 bg-gaming-light sticky top-24">
-              <CardHeader className="pb-0">
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-14 w-14 border-2 border-pubg">
-                    <AvatarImage src={playerStats.avatarUrl} alt={playerStats.name} />
-                    <AvatarFallback className="bg-pubg text-white">{playerStats.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <CardTitle className="text-lg text-white">{playerStats.name}</CardTitle>
-                    <p className="text-gray-400 text-xs">Pro Player</p>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-5">
-                <div className="space-y-3">
-                  <div className="text-center">
-                    <p className="text-gray-400 text-xs">Matches Played</p>
-                    <p className="text-xl font-bold text-white">{playerStats.matchesPlayed}</p>
-                  </div>
-
-                  <Separator className="bg-gaming-darker" />
-
-                  <div className="text-center">
-                    <p className="text-gray-400 text-xs">Win Rate</p>
-                    <p className="text-xl font-bold text-pubg">{playerStats.winRate}</p>
-                  </div>
-
-                  <Separator className="bg-gaming-darker" />
-
-                  <div className="text-center">
-                    <p className="text-gray-400 text-xs">Kills Per Match</p>
-                    <p className="text-xl font-bold text-white">{playerStats.killsPerMatch}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+        <TabsContent value="ongoing" className="space-y-4 mt-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {ongoingMatches.map(match => (
+              <MatchCard key={match.id} match={match} type="ongoing" />
+            ))}
           </div>
-        </div>
-      </div>
+        </TabsContent>
+
+        <TabsContent value="completed" className="space-y-4 mt-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {completedMatches.map(match => (
+              <MatchCard key={match.id} match={match} type="completed" />
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
