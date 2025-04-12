@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icons } from "@/components/Icons";
+import { useMutation } from "@tanstack/react-query";
+import { submitOnboarding } from "@/actions/onboarding";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   pubgUsername: z.string()
@@ -21,16 +22,23 @@ const formSchema = z.object({
   twitchUsername: z.string()
     .min(3, "Twitch username must be at least 3 characters")
     .max(25, "Twitch username cannot exceed 25 characters")
-    .optional()
-    .or(z.literal(''))
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 const Onboarding = () => {
-  const { toast } = useToast();
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { isPending, mutate } = useMutation({
+    mutationFn: submitOnboarding,
+    onSuccess: () => {
+      toast.success("Profile updated successfully!");
+      router.push("/lobby");
+    },
+    onError: (error) => {
+      toast.error("Failed to update profile. Please try again.");
+      console.error(error);
+    }
+  })
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -42,33 +50,11 @@ const Onboarding = () => {
   });
 
   const onSubmit = async (data: FormValues) => {
-    setIsSubmitting(true);
-
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      console.log("Form submitted:", data);
-
-      toast({
-        title: "Profile created!",
-        description: "Your PUBG profile has been successfully set up.",
-        variant: "default",
-      });
-
-      // Navigate to the dashboard or home page after successful submission
-      setTimeout(() => {
-        router.push("/");
-      }, 1500);
-    } catch (error) {
-      console.error("Submission error:", error);
-      toast({
-        title: "Something went wrong",
-        description: "There was an issue setting up your profile. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    mutate({
+      pubg_username: data.pubgUsername,
+      twitch_username: data.twitchUsername,
+      platform: data.platform,
+    });
   };
 
   return (
@@ -105,7 +91,7 @@ const Onboarding = () => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-white">
-                    <span>Twitch Username (Optional)</span>
+                    <span>Twitch Username</span>
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -174,9 +160,9 @@ const Onboarding = () => {
             <Button
               type="submit"
               className="w-full glow-button"
-              disabled={isSubmitting}
+              disabled={isPending}
             >
-              {isSubmitting ? "Setting Up..." : "Complete Setup"}
+              {isPending ? "Setting Up..." : "Complete Setup"}
             </Button>
           </form>
         </Form>

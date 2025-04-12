@@ -3,6 +3,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -37,29 +39,26 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { createGame, CreateGameData } from "@/actions/games";
 
 // Define the form schema with zod
 const formSchema = z.object({
   name: z.string().min(3, "Game name must be at least 3 characters"),
   description: z.string().min(10, "Description must be at least 10 characters").max(300, "Description must be less than 300 characters"),
-  region: z.enum(["north-america", "europe", "asia", "south-america", "oceania"], {
-    required_error: "Please select a region",
-  }),
-  mapName: z.enum(["erangel", "miramar", "sanhok", "vikendi", "karakin"], {
+  map_name: z.enum(["erangel", "miramar", "sanhok", "vikendi", "karakin"], {
     required_error: "Please select a map",
   }),
   platform: z.enum(["pc", "xbox", "playstation", "mobile"], {
     required_error: "Please select a platform",
   }),
-  gameMode: z.enum(["tpp", "fpp"], {
+  game_mode: z.enum(["tpp", "fpp"], {
     required_error: "Please select a game mode",
   }),
-  matchType: z.enum(["solo", "duo", "squad"], {
+  match_type: z.enum(["solo", "duo", "squad"], {
     required_error: "Please select a match type",
   }),
-  playerLimit: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0 && Number(val) <= 100, {
-    message: "Player limit must be a number between 1 and 100",
+  region: z.enum(["eu", "sa", "na", "me", "krjp"], {
+    required_error: "Please select a match type",
   }),
 });
 
@@ -74,28 +73,28 @@ export default function HostGame() {
     defaultValues: {
       name: "",
       description: "",
-      region: "north-america",
-      mapName: "erangel",
+      map_name: "erangel",
       platform: "pc",
-      gameMode: "tpp",
-      matchType: "squad",
-      playerLimit: "100",
+      game_mode: "tpp",
+      match_type: "squad",
     },
+  });
+
+  const mutation = useMutation({
+    mutationFn: (data: CreateGameData) => createGame(data),
+    onSuccess: (data) => {
+      toast.success("Game created successfully!");
+      router.push(`/game/${data.id}`);
+    },
+    onError: (error) => {
+      toast.error("Failed to create game. Please try again.");
+      console.error(error);
+    }
   });
 
   // Form submission handler
   const onSubmit = (data: FormValues) => {
-    console.log(data);
-
-    // Generate a random ID for the new game
-    const newGameId = Math.floor(Math.random() * 1000) + 300;
-
-    toast.success("Game created successfully!");
-
-    // Redirect to the game page
-    setTimeout(() => {
-      router.push(`/game/${newGameId}`);
-    }, 1000);
+    mutation.mutate(data);
   };
 
   // Platform icon mapping
@@ -170,39 +169,10 @@ export default function HostGame() {
                   />
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Region Selection */}
-                    <FormField
-                      control={form.control}
-                      name="region"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-white">Region</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger className="bg-gaming-darker border-gaming-darker text-white">
-                                <SelectValue placeholder="Select region" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="bg-gaming-light border-gaming-darker">
-                              <SelectItem value="north-america" className="text-white">North America</SelectItem>
-                              <SelectItem value="europe" className="text-white">Europe</SelectItem>
-                              <SelectItem value="asia" className="text-white">Asia</SelectItem>
-                              <SelectItem value="south-america" className="text-white">South America</SelectItem>
-                              <SelectItem value="oceania" className="text-white">Oceania</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormDescription className="text-gray-400">
-                            Select your server region for the best connection.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
                     {/* Map Selection */}
                     <FormField
                       control={form.control}
-                      name="mapName"
+                      name="map_name"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-white">Map</FormLabel>
@@ -222,6 +192,36 @@ export default function HostGame() {
                           </Select>
                           <FormDescription className="text-gray-400">
                             Choose the battlefield for your match.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Region */}
+                    <FormField
+                      control={form.control}
+                      name="region"
+
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">Region</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="bg-gaming-darker border-gaming-darker text-white">
+                                <SelectValue placeholder="Select region" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-gaming-light border-gaming-darker">
+                              <SelectItem value="na" className="text-white">North America</SelectItem>
+                              <SelectItem value="sa" className="text-white">South America</SelectItem>
+                              <SelectItem value="eu" className="text-white">Europe</SelectItem>
+                              <SelectItem value="krjp" className="text-white">Korea and Japan</SelectItem>
+                              <SelectItem value="asia" className="text-white">Asia</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormDescription className="text-gray-400">
+                            Select the region for your match.
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -263,36 +263,12 @@ export default function HostGame() {
                         </FormItem>
                       )}
                     />
-
-                    {/* Player Limit */}
-                    <FormField
-                      control={form.control}
-                      name="playerLimit"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-white">Player Limit</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min="1"
-                              max="100"
-                              {...field}
-                              className="bg-gaming-darker border-gaming-darker text-white"
-                            />
-                          </FormControl>
-                          <FormDescription className="text-gray-400">
-                            Maximum number of players (up to 100).
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                   </div>
 
                   {/* Game Mode Selection */}
                   <FormField
                     control={form.control}
-                    name="gameMode"
+                    name="game_mode"
                     render={({ field }) => (
                       <FormItem className="space-y-3">
                         <FormLabel className="text-white">Game Mode</FormLabel>
@@ -328,7 +304,7 @@ export default function HostGame() {
                   {/* Match Type Selection */}
                   <FormField
                     control={form.control}
-                    name="matchType"
+                    name="match_type"
                     render={({ field }) => (
                       <FormItem className="space-y-3">
                         <FormLabel className="text-white">Match Type</FormLabel>
@@ -373,8 +349,9 @@ export default function HostGame() {
                   <Button
                     type="submit"
                     className="w-full bg-pubg hover:bg-pubg-light text-white font-medium"
+                    disabled={mutation.isPending}
                   >
-                    Create Game
+                    {mutation.isPending ? "Creating..." : "Create Game"}
                   </Button>
                 </form>
               </Form>

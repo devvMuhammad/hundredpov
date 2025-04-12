@@ -1,6 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link"
 import {
   ArrowLeft, Globe, Monitor, Gamepad2, Smartphone,
@@ -58,186 +58,101 @@ interface Team {
   players: Player[];
   isFilled: boolean;
 }
-export default function Game() {
-  const params = useParams<{ id: string }>();
-  const id = params?.id;
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [heroMode] = useState(true); // Host powers enabled
 
-  // Mock game data
-  const [gameData, setGameData] = useState<{
+interface Game {
+  id: string;
+  name: string;
+  description: string;
+  map_name: string;
+  platform: string;
+  game_mode: string;
+  match_type: string;
+  status: GameStatus;
+  created_at: string;
+  host: {
     id: string;
     name: string;
-    mode: MatchMode;
-    map: MatchMap;
-    platform: Platform;
-    region: Region;
-    maxPlayers: number;
-    currentPlayers: number;
-    status: GameStatus;
-    timeCreated: string;
-    host: {
-      name: string;
-      avatarUrl: string;
-      rank: string;
-    };
-    teams: Team[];
-  } | null>(null);
+    avatar_url: string;
+  };
+}
+
+interface GameProps {
+  game: Game;
+}
+
+export default function Game({ game }: GameProps) {
+  const router = useRouter();
+  const [heroMode] = useState(true); // Host powers enabled
+
+  // Mock teams data for now
+  const [teams, setTeams] = useState<Team[]>(() => {
+    const teamSize = game.match_type === "solo" ? 1 : game.match_type === "duo" ? 2 : 4;
+    const totalTeams = game.match_type === "solo" ? 100 : game.match_type === "duo" ? 50 : 25;
+
+    return Array.from({ length: totalTeams }, (_, i) => ({
+      id: `team-${i}`,
+      players: [],
+      isFilled: false
+    }));
+  });
 
   // Dialog and action states
   const [swapDialogOpen, setSwapDialogOpen] = useState(false);
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
   const [selectedTeamIndex, setSelectedTeamIndex] = useState<number | null>(null);
 
-  useEffect(() => {
-    // Simulate fetching game data
-    setTimeout(() => {
-      // Generate mock data based on the match ID
-      const mockGame = generateMockGameData(id || "1");
-      setGameData(mockGame);
-      setLoading(false);
-    }, 1000);
-  }, [id]);
-
   // Handle game status changes
   const handleStartGame = () => {
-    if (gameData) {
-      setGameData({
-        ...gameData,
-        status: "ongoing"
-      });
-    }
+    // TODO: Implement game start logic with server action
   };
 
   const handleEndGame = () => {
-    if (gameData) {
-      setGameData({
-        ...gameData,
-        status: "completed"
-      });
-    }
+    // TODO: Implement game end logic with server action
   };
 
   // Team management actions
   const handleSwapTeam = (fromIndex: number, toIndex: number) => {
-    if (gameData) {
-      const newTeams = [...gameData.teams];
-      const temp = newTeams[fromIndex];
-      newTeams[fromIndex] = newTeams[toIndex];
-      newTeams[toIndex] = temp;
-
-      setGameData({
-        ...gameData,
-        teams: newTeams
-      });
-      setSwapDialogOpen(false);
-    }
+    const newTeams = [...teams];
+    const temp = newTeams[fromIndex];
+    newTeams[fromIndex] = newTeams[toIndex];
+    newTeams[toIndex] = temp;
+    setTeams(newTeams);
+    setSwapDialogOpen(false);
   };
 
   const handleMoveTeam = (fromIndex: number, toIndex: number) => {
-    if (gameData && fromIndex !== toIndex) {
-      const newTeams = [...gameData.teams];
+    if (fromIndex !== toIndex) {
+      const newTeams = [...teams];
       const movingTeam = { ...newTeams[fromIndex] };
-
-      // Create an empty team for the original position
       newTeams[fromIndex] = {
         id: `team-${fromIndex}`,
         players: [],
         isFilled: false
       };
-
-      // Move team to new position
       newTeams[toIndex] = movingTeam;
-
-      setGameData({
-        ...gameData,
-        teams: newTeams
-      });
+      setTeams(newTeams);
       setMoveDialogOpen(false);
     }
   };
 
   const handleRemoveTeam = (index: number) => {
-    if (gameData) {
-      const newTeams = [...gameData.teams];
-      newTeams[index] = {
-        id: `team-${index}`,
-        players: [],
-        isFilled: false
-      };
-
-      setGameData({
-        ...gameData,
-        teams: newTeams,
-        currentPlayers: gameData.currentPlayers - (gameData.mode === "Solo" ? 1 : gameData.mode === "Duo" ? 2 : 4)
-      });
-    }
-  };
-
-  // Generate mock player data
-  const generateMockGameData = (gameId: string) => {
-    // Determine game mode based on ID to simulate different modes
-    const modeNum = parseInt(gameId) % 3;
-    const mode: MatchMode = modeNum === 0 ? "Solo" : modeNum === 1 ? "Duo" : "Squad";
-
-    // Calculate team size and number of teams based on mode
-    const teamSize = mode === "Solo" ? 1 : mode === "Duo" ? 2 : 4;
-    const totalTeams = mode === "Solo" ? 100 : mode === "Duo" ? 50 : 25;
-
-    // Generate teams with varying fill status
-    const teams: Team[] = [];
-    for (let i = 0; i < totalTeams; i++) {
-      const isFilled = Math.random() > 0.7; // 30% chance of being unfilled
-      const teamPlayers: Player[] = [];
-
-      if (isFilled) {
-        // Generate players for filled teams
-        for (let j = 0; j < teamSize; j++) {
-          teamPlayers.push({
-            id: `player-${i}-${j}`,
-            name: `Player${i}${j}`,
-            twitchName: `twitchPlayer${i}${j}`,
-            avatarUrl: `https://i.pravatar.cc/150?img=${(i * teamSize + j) % 70}`
-          });
-        }
-      }
-
-      teams.push({
-        id: `team-${i}`,
-        players: teamPlayers,
-        isFilled
-      });
-    }
-
-    return {
-      id: gameId,
-      name: `Battle Royale ${gameId}`,
-      mode,
-      map: ["Erangel", "Miramar", "Sanhok", "Vikendi", "Taego"][parseInt(gameId) % 5] as MatchMap,
-      platform: ["PC", "Xbox", "PlayStation", "Mobile"][parseInt(gameId) % 4] as Platform,
-      region: ["North America", "Europe", "Asia", "South America", "Oceania"][parseInt(gameId) % 5] as Region,
-      maxPlayers: mode === "Solo" ? 100 : mode === "Duo" ? 100 : 100,
-      currentPlayers: Math.floor(Math.random() * (mode === "Solo" ? 100 : mode === "Duo" ? 100 : 100)),
-      status: ["open", "ongoing", "completed"][parseInt(gameId) % 3] as GameStatus,
-      timeCreated: "30 minutes ago",
-      host: {
-        name: "HostPlayer123",
-        avatarUrl: "https://i.pravatar.cc/150?img=1",
-        rank: "Diamond"
-      },
-      teams
+    const newTeams = [...teams];
+    newTeams[index] = {
+      id: `team-${index}`,
+      players: [],
+      isFilled: false
     };
+    setTeams(newTeams);
   };
 
-  const getPlatformIcon = (platform: Platform) => {
-    switch (platform) {
-      case 'PC':
+  const getPlatformIcon = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case 'pc':
         return <Monitor className="h-4 w-4" />;
-      case 'Xbox':
-      case 'PlayStation':
+      case 'xbox':
+      case 'playstation':
         return <Gamepad2 className="h-4 w-4" />;
-      case 'Mobile':
+      case 'mobile':
         return <Smartphone className="h-4 w-4" />;
       default:
         return <Gamepad2 className="h-4 w-4" />;
@@ -272,24 +187,8 @@ export default function Game() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gaming-darker text-white pt-20 pb-12 flex items-center justify-center">
-        <div className="animate-pulse">Loading match data...</div>
-      </div>
-    );
-  }
-
-  if (!gameData) {
-    return (
-      <div className="min-h-screen bg-gaming-darker text-white pt-20 pb-12 flex items-center justify-center">
-        <div>Match not found</div>
-      </div>
-    );
-  }
-
-  const filledTeams = gameData.teams.filter(team => team.isFilled);
-  const emptyTeams = gameData.teams.filter(team => !team.isFilled);
+  const filledTeams = teams.filter(team => team.isFilled);
+  const emptyTeams = teams.filter(team => !team.isFilled);
 
   return (
     <div className="min-h-screen bg-gaming-darker text-white pt-20 pb-12">
@@ -301,14 +200,14 @@ export default function Game() {
             Back to Lobby
           </Link>
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl md:text-3xl font-bold">{gameData.name}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold">{game.name}</h1>
             <div className="flex items-center gap-3">
-              {getStatusIndicator(gameData.status)}
+              {getStatusIndicator(game.status)}
 
               {/* Host controls */}
               {heroMode && (
                 <>
-                  {gameData.status === "open" && (
+                  {game.status === "open" && (
                     <Button
                       variant="default"
                       size="sm"
@@ -320,7 +219,7 @@ export default function Game() {
                     </Button>
                   )}
 
-                  {gameData.status === "ongoing" && (
+                  {game.status === "ongoing" && (
                     <Button
                       variant="default"
                       size="sm"
@@ -332,7 +231,7 @@ export default function Game() {
                     </Button>
                   )}
 
-                  {gameData.status === "completed" && (
+                  {game.status === "completed" && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -361,30 +260,16 @@ export default function Game() {
               <div className="p-4 bg-gradient-to-b from-gaming-darker/5 to-gaming-darker/15">
                 <div className="flex flex-col items-center gap-4">
                   <Avatar className="h-20 w-20 border-2 border-pubg ring-2 ring-pubg/30 ring-offset-2 ring-offset-gaming-darker">
-                    <AvatarImage src={gameData.host.avatarUrl} alt={gameData.host.name} />
-                    <AvatarFallback className="bg-pubg text-white">{gameData.host.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                    <AvatarImage src={game.host.avatar_url} alt={game.host.name} />
+                    <AvatarFallback className="bg-pubg text-white">{game.host.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div className="text-center">
-                    <p className="font-bold text-xl text-white">{gameData.host.name}</p>
+                    <p className="font-bold text-xl text-white">{game.host.name}</p>
                     <Badge variant="outline" className="mt-2 bg-gaming-darker/40 border-pubg/40 text-pubg">
-                      {gameData.host.rank} Rank
+                      Host
                     </Badge>
-                    {heroMode && (
-                      <Badge variant="outline" className="mt-2 ml-2 bg-pubg/20 border-pubg text-white">
-                        Host
-                      </Badge>
-                    )}
                   </div>
                 </div>
-              </div>
-              <div className="p-4 bg-gradient-to-b from-transparent to-pubg/5">
-                <Button
-                  variant="default"
-                  className="w-full bg-pubg hover:bg-pubg-dark text-white"
-                >
-                  <Twitch className="h-4 w-4 mr-2" />
-                  View Host Profile
-                </Button>
               </div>
             </CardContent>
           </Card>
@@ -403,23 +288,15 @@ export default function Game() {
                   <p className="text-xs text-gray-400 mb-1">Game Mode</p>
                   <div className="flex items-center gap-1.5">
                     <Users className="h-4 w-4 text-pubg" />
-                    <p className="text-white font-medium">{gameData.mode}</p>
-                  </div>
-                </div>
-
-                <div className="bg-gaming-darker/30 p-3 rounded-md">
-                  <p className="text-xs text-gray-400 mb-1">Region</p>
-                  <div className="flex items-center gap-1.5">
-                    <Globe className="h-4 w-4 text-pubg" />
-                    <p className="text-white font-medium">{gameData.region}</p>
+                    <p className="text-white font-medium">{game.match_type.toUpperCase()}</p>
                   </div>
                 </div>
 
                 <div className="bg-gaming-darker/30 p-3 rounded-md">
                   <p className="text-xs text-gray-400 mb-1">Platform</p>
                   <div className="flex items-center gap-1.5">
-                    {getPlatformIcon(gameData.platform)}
-                    <p className="text-white font-medium">{gameData.platform}</p>
+                    {getPlatformIcon(game.platform)}
+                    <p className="text-white font-medium">{game.platform}</p>
                   </div>
                 </div>
 
@@ -427,7 +304,15 @@ export default function Game() {
                   <p className="text-xs text-gray-400 mb-1">Map</p>
                   <div className="flex items-center gap-1.5">
                     <MapPin className="h-4 w-4 text-pubg" />
-                    <p className="text-white font-medium">{gameData.map}</p>
+                    <p className="text-white font-medium">{game.map_name}</p>
+                  </div>
+                </div>
+
+                <div className="bg-gaming-darker/30 p-3 rounded-md">
+                  <p className="text-xs text-gray-400 mb-1">Perspective</p>
+                  <div className="flex items-center gap-1.5">
+                    <User className="h-4 w-4 text-pubg" />
+                    <p className="text-white font-medium">{game.game_mode.toUpperCase()}</p>
                   </div>
                 </div>
               </div>
@@ -435,12 +320,8 @@ export default function Game() {
               <div className="mt-4 bg-gaming-darker/20 p-3 rounded-md">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                   <div className="flex items-center gap-1.5">
-                    <User className="h-4 w-4 text-pubg" />
-                    <p className="text-sm text-white">{gameData.currentPlayers}/{gameData.maxPlayers} Players</p>
-                  </div>
-                  <div className="flex items-center gap-1.5">
                     <Clock className="h-4 w-4 text-pubg" />
-                    <p className="text-sm text-white">Created {gameData.timeCreated}</p>
+                    <p className="text-sm text-white">Created {new Date(game.created_at).toLocaleString()}</p>
                   </div>
                 </div>
               </div>
@@ -452,15 +333,15 @@ export default function Game() {
         <div className="mb-6">
           <h2 className="text-xl font-bold mb-4">Teams</h2>
 
-          <div className={`grid gap-3 ${gameData.mode === 'Solo' ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8' :
-            gameData.mode === 'Duo' ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' :
+          <div className={`grid gap-3 ${game.match_type === 'solo' ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8' :
+            game.match_type === 'duo' ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' :
               'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
             }`}>
-            {gameData.teams.map((team, index) => (
+            {teams.map((team, index) => (
               <TeamCard
                 key={team.id}
                 team={team}
-                mode={gameData.mode}
+                mode={game.match_type}
                 teamNumber={index + 1}
                 heroMode={heroMode}
                 onSelectTeam={() => setSelectedTeamIndex(index)}
@@ -491,7 +372,7 @@ export default function Game() {
             {filledTeams.length > 1 ? (
               <div className="grid gap-2 py-4">
                 {filledTeams.map((team) => {
-                  const indexInOriginalArray = gameData.teams.findIndex(t => t.id === team.id);
+                  const indexInOriginalArray = teams.findIndex(t => t.id === team.id);
                   if (indexInOriginalArray === selectedTeamIndex) return null;
 
                   return (
@@ -545,7 +426,7 @@ export default function Game() {
             {emptyTeams.length > 0 ? (
               <div className="grid gap-2 py-4">
                 {emptyTeams.map((team) => {
-                  const indexInOriginalArray = gameData.teams.findIndex(t => t.id === team.id);
+                  const indexInOriginalArray = teams.findIndex(t => t.id === team.id);
 
                   return (
                     <Button
@@ -582,7 +463,7 @@ export default function Game() {
       </div>
     </div>
   );
-};
+}
 
 // Component for rendering a team card
 const TeamCard = ({
@@ -596,7 +477,7 @@ const TeamCard = ({
   onRemoveTeam
 }: {
   team: Team;
-  mode: MatchMode;
+  mode: string;
   teamNumber: number;
   heroMode: boolean;
   onSelectTeam: () => void;
@@ -663,7 +544,7 @@ const TeamCard = ({
       </CardHeader>
       <CardContent className="p-0">
         {team.isFilled ? (
-          <div className={`${mode === 'Squad' ? 'grid grid-cols-2 gap-px bg-gaming-darker/30' : ''}`}>
+          <div className={`${mode === 'squad' ? 'grid grid-cols-2 gap-px bg-gaming-darker/30' : ''}`}>
             {team.players.map((player) => (
               <PlayerCard key={player.id} player={player} mode={mode} />
             ))}
@@ -680,7 +561,7 @@ const TeamCard = ({
 };
 
 // Component for rendering a player card
-const PlayerCard = ({ player }: { player: Player; mode: MatchMode }) => {
+const PlayerCard = ({ player }: { player: Player; mode: string }) => {
   return (
     <HoverCard>
       <HoverCardTrigger asChild>
