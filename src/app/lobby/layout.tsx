@@ -27,8 +27,6 @@ async function getPlayerInfo() {
     .eq('id', user.id)
     .single();
 
-  console.log("PLAYER", playerInfo);
-  console.log("PROFILE", profile);
   return { profile, playerInfo, user };
 }
 
@@ -67,6 +65,7 @@ export default async function Layout({ children }: PropsWithChildren) {
         <div className="flex flex-col md:flex-row gap-6">
           {/* Left column - Match lists */}
           {children}
+
 
           {/* Right column - Player info card */}
           <div className="w-full md:w-1/4 mt-6 md:mt-0">

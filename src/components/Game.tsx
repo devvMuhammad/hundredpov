@@ -40,11 +40,11 @@ import {
 } from "@/components/ui/alert-dialog";
 
 // Types for our game
-type MatchMode = "Solo" | "Duo" | "Squad";
-type MatchMap = "Erangel" | "Miramar" | "Sanhok" | "Vikendi" | "Taego";
-type Platform = "PC" | "Xbox" | "PlayStation" | "Mobile";
-type Region = "North America" | "Europe" | "Asia" | "South America" | "Oceania";
-type GameStatus = "open" | "ongoing" | "completed";
+// type MatchMode = "Solo" | "Duo" | "Squad";
+// type MatchMap = "Erangel" | "Miramar" | "Sanhok" | "Vikendi" | "Taego";
+// type Platform = "PC" | "Xbox" | "PlayStation" | "Mobile";
+// type Region = "North America" | "Europe" | "Asia" | "South America" | "Oceania";
+type GameStatus = "open" | "live" | "completed";
 
 interface Player {
   id: string;
@@ -60,7 +60,6 @@ interface Team {
 }
 
 interface Game {
-  id: string;
   name: string;
   description: string;
   map_name: string;
@@ -86,7 +85,7 @@ export default function Game({ game }: GameProps) {
 
   // Mock teams data for now
   const [teams, setTeams] = useState<Team[]>(() => {
-    const teamSize = game.match_type === "solo" ? 1 : game.match_type === "duo" ? 2 : 4;
+    // const teamSize = game.match_type === "solo" ? 1 : game.match_type === "duo" ? 2 : 4;
     const totalTeams = game.match_type === "solo" ? 100 : game.match_type === "duo" ? 50 : 25;
 
     return Array.from({ length: totalTeams }, (_, i) => ({
@@ -165,10 +164,10 @@ export default function Game({ game }: GameProps) {
         return (
           <div className="flex items-center gap-1.5">
             <CircleDot className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-            <span className="text-yellow-400 font-medium">Recruiting</span>
+            <span className="text-yellow-400 font-medium">Open for Joining</span>
           </div>
         );
-      case 'ongoing':
+      case 'live':
         return (
           <div className="flex items-center gap-1.5">
             <CircleDot className="h-3 w-3 text-green-400 fill-green-400" />
@@ -219,7 +218,7 @@ export default function Game({ game }: GameProps) {
                     </Button>
                   )}
 
-                  {game.status === "ongoing" && (
+                  {game.status === "live" && (
                     <Button
                       variant="default"
                       size="sm"
@@ -288,7 +287,7 @@ export default function Game({ game }: GameProps) {
                   <p className="text-xs text-gray-400 mb-1">Game Mode</p>
                   <div className="flex items-center gap-1.5">
                     <Users className="h-4 w-4 text-pubg" />
-                    <p className="text-white font-medium">{game.match_type.toUpperCase()}</p>
+                    <p className="text-white font-medium">{game.match_type}</p>
                   </div>
                 </div>
 
@@ -317,11 +316,17 @@ export default function Game({ game }: GameProps) {
                 </div>
               </div>
 
-              <div className="mt-4 bg-gaming-darker/20 p-3 rounded-md">
+              <div className="flex justify-between items-center mt-4 bg-gaming-darker/20 p-3 rounded-md">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                   <div className="flex items-center gap-1.5">
                     <Clock className="h-4 w-4 text-pubg" />
                     <p className="text-sm text-white">Created {new Date(game.created_at).toLocaleString()}</p>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <Users className="h-4 w-4 text-pubg" />
+                    <p className="text-sm text-white">Players Joined <strong className="ml-2">0 / 100</strong></p>
                   </div>
                 </div>
               </div>
