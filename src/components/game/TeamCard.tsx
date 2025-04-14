@@ -1,12 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CircleDashed, MoreVertical, ArrowRightLeft, MoveRight, Trash2 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+import { CircleDashed, Trash2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,6 +13,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { PlayerCard } from "./PlayerCard";
+import { SwapTeam } from "./SwapTeam";
+import { MoveTeam } from "./MoveTeam";
 
 interface Player {
   id: string;
@@ -38,9 +34,10 @@ interface TeamCardProps {
   mode: string;
   teamNumber: number;
   heroMode: boolean;
+  teams: Team[];
   onSelectTeam: () => void;
-  onSwapTeam: () => void;
-  onMoveTeam: () => void;
+  onSwapTeam: (fromIndex: number, toIndex: number) => void;
+  onMoveTeam: (fromIndex: number, toIndex: number) => void;
   onRemoveTeam: () => void;
 }
 
@@ -49,6 +46,7 @@ export function TeamCard({
   mode,
   teamNumber,
   heroMode,
+  teams,
   onSelectTeam,
   onSwapTeam,
   onMoveTeam,
@@ -63,52 +61,40 @@ export function TeamCard({
             Empty
           </Badge>
         ) : heroMode && (
-          <DropdownMenu>
-            <DropdownMenuTrigger className="h-6 w-6 rounded-full hover:bg-gaming-darker/50 flex items-center justify-center">
-              <MoreVertical className="h-4 w-4 text-gray-400" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-gaming-darker border-pubg/20 text-white">
-              <DropdownMenuItem className="hover:bg-gaming-light/20 cursor-pointer" onClick={onSwapTeam}>
-                <ArrowRightLeft className="h-4 w-4 mr-2" />
-                Swap Position
-              </DropdownMenuItem>
-              <DropdownMenuItem className="hover:bg-gaming-light/20 cursor-pointer" onClick={onMoveTeam}>
-                <MoveRight className="h-4 w-4 mr-2" />
-                Move to Empty Slot
-              </DropdownMenuItem>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <DropdownMenuItem
-                    className="hover:bg-red-900/30 text-red-400 cursor-pointer"
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      onSelectTeam();
-                    }}
+          <div className="flex items-center gap-1">
+            <SwapTeam teamIndex={teamNumber - 1} teams={teams} onSwapTeam={onSwapTeam} />
+            <MoveTeam teamIndex={teamNumber - 1} teams={teams} onMoveTeam={onMoveTeam} />
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button
+                  className="h-6 w-6 rounded-full hover:bg-gaming-darker/50 flex items-center justify-center"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onSelectTeam();
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 text-red-400" />
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="bg-gaming-light border-pubg/30">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-white">Remove Team</AlertDialogTitle>
+                  <AlertDialogDescription className="text-gray-400">
+                    Are you sure you want to remove <strong>Team {teamNumber}</strong>? This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="bg-transparent text-white border-gaming-light/30 hover:bg-gaming-darker/50">Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-red-700 text-white hover:bg-red-800"
+                    onClick={onRemoveTeam}
                   >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Remove Team
-                  </DropdownMenuItem>
-                </AlertDialogTrigger>
-                <AlertDialogContent className="bg-gaming-light border-pubg/30">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className="text-white">Remove Team</AlertDialogTitle>
-                    <AlertDialogDescription className="text-gray-400">
-                      Are you sure you want to remove <strong>Team {teamNumber}</strong>? This action cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel className="bg-transparent text-white border-gaming-light/30 hover:bg-gaming-darker/50">Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      className="bg-red-700 text-white hover:bg-red-800"
-                      onClick={onRemoveTeam}
-                    >
-                      Remove
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                    Remove
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         )}
       </CardHeader>
       <CardContent className="p-0">

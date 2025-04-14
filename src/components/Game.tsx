@@ -122,6 +122,7 @@ export default function Game({ game, userId }: GameProps) {
         <Teams
           matchType={game.match_type}
           heroMode={heroMode}
+
         />
       </div>
     </div>

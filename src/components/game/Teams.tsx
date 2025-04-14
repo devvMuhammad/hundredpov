@@ -1,9 +1,6 @@
 import { useState } from "react";
 import { TeamCard } from "./TeamCard";
-import { SwapTeamDialog } from "./SwapTeamDialog";
-import { MoveTeamDialog } from "./MoveTeamDialog";
-import { JoinGameDialog } from "./JoinGameDialog";
-import { Button } from "@/components/ui/button";
+import { JoinGame } from "./JoinGame";
 
 interface Player {
   id: string;
@@ -35,18 +32,12 @@ export function Teams({ matchType, heroMode, gameId, userId }: TeamsProps) {
     }));
   });
 
-  const [selectedTeamIndex, setSelectedTeamIndex] = useState<number | null>(null);
-  const [swapDialogOpen, setSwapDialogOpen] = useState(false);
-  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
-  const [joinDialogOpen, setJoinDialogOpen] = useState(false);
-
   const handleSwapTeam = (fromIndex: number, toIndex: number) => {
     const newTeams = [...teams];
     const temp = newTeams[fromIndex];
     newTeams[fromIndex] = newTeams[toIndex];
     newTeams[toIndex] = temp;
     setTeams(newTeams);
-    setSwapDialogOpen(false);
   };
 
   const handleMoveTeam = (fromIndex: number, toIndex: number) => {
@@ -60,7 +51,6 @@ export function Teams({ matchType, heroMode, gameId, userId }: TeamsProps) {
       };
       newTeams[toIndex] = movingTeam;
       setTeams(newTeams);
-      setMoveDialogOpen(false);
     }
   };
 
@@ -74,16 +64,16 @@ export function Teams({ matchType, heroMode, gameId, userId }: TeamsProps) {
     setTeams(newTeams);
   };
 
+  const availableSlots = teams
+    .map((team, index) => ({ index, isFilled: team.isFilled }))
+    .filter(({ isFilled }) => !isFilled)
+    .map(({ index }) => index);
+
   return (
     <div className="mb-6">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">Teams</h2>
-        <Button
-          onClick={() => setJoinDialogOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          Join Game
-        </Button>
+        <JoinGame gameId={gameId} userId={userId} availableSlots={availableSlots} />
       </div>
 
       <div className={`grid gap-3 ${matchType === 'solo' ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8' :
@@ -97,42 +87,14 @@ export function Teams({ matchType, heroMode, gameId, userId }: TeamsProps) {
             mode={matchType}
             teamNumber={index + 1}
             heroMode={heroMode}
-            onSelectTeam={() => setSelectedTeamIndex(index)}
-            onSwapTeam={() => {
-              setSelectedTeamIndex(index);
-              setSwapDialogOpen(true);
-            }}
-            onMoveTeam={() => {
-              setSelectedTeamIndex(index);
-              setMoveDialogOpen(true);
-            }}
+            teams={teams}
+            onSelectTeam={() => { }}
+            onSwapTeam={handleSwapTeam}
+            onMoveTeam={handleMoveTeam}
             onRemoveTeam={() => handleRemoveTeam(index)}
           />
         ))}
       </div>
-
-      <SwapTeamDialog
-        open={swapDialogOpen}
-        onOpenChange={setSwapDialogOpen}
-        selectedTeamIndex={selectedTeamIndex}
-        teams={teams}
-        onSwapTeam={handleSwapTeam}
-      />
-
-      <MoveTeamDialog
-        open={moveDialogOpen}
-        onOpenChange={setMoveDialogOpen}
-        selectedTeamIndex={selectedTeamIndex}
-        teams={teams}
-        onMoveTeam={handleMoveTeam}
-      />
-
-      <JoinGameDialog
-        open={joinDialogOpen}
-        onOpenChange={setJoinDialogOpen}
-        gameId={gameId}
-        userId={userId}
-      />
     </div>
   );
 } 
