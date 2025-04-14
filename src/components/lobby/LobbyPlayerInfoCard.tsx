@@ -1,14 +1,14 @@
 import Link from "next/link";
-import { UserCircle2, PlusCircle, Twitch, Gamepad2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { Gamepad2, PlusCircle, Twitch, UserCircle2 } from "lucide-react";
 
 interface PlayerInfo {
-  twitch_username: string;
-  pubg_username: string;
-  platform: string;
+  twitch_username: string | null;
+  pubg_username: string | null;
+  platform: string | null;
 }
 
 interface Profile {
@@ -22,8 +22,8 @@ interface LobbyPlayerInfoCardProps {
   profile: Profile | null;
 }
 
-function getPlatformIcon(platform: string) {
-  switch (platform.toLowerCase()) {
+const getPlatformIcon = (platform: string | null) => {
+  switch (platform?.toLowerCase()) {
     case "steam":
       return <Gamepad2 className="h-5 w-5 text-pubg" />;
     case "xbox":
@@ -31,9 +31,9 @@ function getPlatformIcon(platform: string) {
     case "playstation":
       return <Gamepad2 className="h-5 w-5 text-blue-500" />;
     default:
-      return <Gamepad2 className="h-5 w-5 text-gray-500" />;
+      return <Gamepad2 className="h-5 w-5 text-gray-400" />;
   }
-}
+};
 
 export function LobbyPlayerInfoCard({ user, playerInfo, profile }: LobbyPlayerInfoCardProps) {
   return (

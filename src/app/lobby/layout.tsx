@@ -6,26 +6,24 @@ async function getPlayerInfo() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) {
-    return { user: null, playerInfo: null, profile: null };
-  }
+  if (!user) return null;
 
   const { data: playerInfo } = await supabase
     .from('player_info')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('id', user.id)
     .single();
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('name, avatar_url')
+    .select('*')
     .eq('id', user.id)
     .single();
 
   return {
-    user: user ? { id: user.id } : null,
-    playerInfo,
-    profile
+    user: user || null,
+    playerInfo: playerInfo || null,
+    profile: profile || null
   };
 }
 
@@ -37,16 +35,14 @@ export default async function LobbyLayout({ children }: PropsWithChildren) {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row gap-6">
           {/* Left column - Main content */}
-          <div className="w-full md:w-3/4">
-            {children}
-          </div>
+          {children}
 
           {/* Right column - Player info card */}
           <div className="w-full md:w-1/4 mt-6 md:mt-0">
             <LobbyPlayerInfoCard
-              user={data.user}
-              playerInfo={data.playerInfo}
-              profile={data.profile}
+              user={data?.user || null}
+              playerInfo={data?.playerInfo || null}
+              profile={data?.profile || null}
             />
           </div>
         </div>
