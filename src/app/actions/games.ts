@@ -31,9 +31,9 @@ export async function fetchGames(category: GameCategory): Promise<Game[]> {
     .from('games')
     .select(`
       *,
-      host:profiles!host_id(
+      host:player_info!host_id(
         id,
-        name,
+        name:twitch_username,
         avatar_url
       )
     `)
@@ -45,6 +45,6 @@ export async function fetchGames(category: GameCategory): Promise<Game[]> {
     throw error;
   }
 
-  console.log("games are", category, games.length);
+  // console.log("games are", category, games.length);
   return games || [];
 } 

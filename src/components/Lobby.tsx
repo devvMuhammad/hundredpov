@@ -13,7 +13,7 @@ const Lobby = () => {
   const [activeTab, setActiveTab] = useState<GameCategory>('open');
 
   const { data: games, isLoading, isError } = useQuery({
-    queryKey: ['games', activeTab, new Date().toString()],
+    queryKey: ['games', activeTab],
     queryFn: () => fetchGames(activeTab),
   });
 
@@ -61,6 +61,7 @@ const Lobby = () => {
             <EmptyState category="open" />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
               {games?.map(game => (
                 <MatchCard key={game.id} match={game} type="open" />
               ))}

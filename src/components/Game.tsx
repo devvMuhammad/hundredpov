@@ -1,64 +1,11 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link"
-import {
-  ArrowLeft, Globe, Monitor, Gamepad2, Smartphone,
-  User, Users, Clock, Twitch, MapPin,
-  CircleDot, UserRound, CircleDashed, MoreVertical,
-  PlayCircle, StopCircle, ArrowRightLeft, MoveRight, Trash2
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogClose
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { createClient } from "@/lib/supabase/client";
+import Link from "next/link";
+import { ArrowLeft, PlayCircle, StopCircle, CircleDot } from "lucide-react";
+import { HostInfo } from "./game/HostInfo";
+import { GameOverview } from "./game/GameOverview";
+import { Teams } from "./game/Teams";
 
-// Types for our game
-// type MatchMode = "Solo" | "Duo" | "Squad";
-// type MatchMap = "Erangel" | "Miramar" | "Sanhok" | "Vikendi" | "Taego";
-// type Platform = "PC" | "Xbox" | "PlayStation" | "Mobile";
-// type Region = "North America" | "Europe" | "Asia" | "South America" | "Oceania";
 type GameStatus = "open" | "live" | "completed";
-
-interface Player {
-  id: string;
-  name: string;
-  twitchName: string;
-  avatarUrl: string;
-}
-
-interface Team {
-  id: string;
-  players: Player[];
-  isFilled: boolean;
-}
 
 interface Game {
   id: string;
@@ -80,54 +27,11 @@ interface Game {
 interface GameProps {
   game: Game;
   userId: string | undefined;
-  gameSlots: { slot_index: number, players: any[] }[]
+  slots: { slot_index: number; players: { id: string; name: string; twitchName: string; avatarUrl: string }[] }[];
 }
 
-export default function Game({ game, userId, gameSlots }: GameProps) {
-  const router = useRouter();
+export default function Game({ game, userId }: GameProps) {
   const heroMode = userId === game.host.id;
-  const [joinDialogOpen, setJoinDialogOpen] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
-  // const [gameSlots] = useState<{ slot_index: number; player_id: string | null }[]>([]);
-
-  // Mock teams data for now
-  const [teams, setTeams] = useState<Team[]>(() => {
-    // const teamSize = game.match_type === "solo" ? 1 : game.match_type === "duo" ? 2 : 4;
-    const totalTeams = game.match_type === "solo" ? 100 : game.match_type === "duo" ? 50 : 25;
-
-    return Array.from({ length: totalTeams }, (_, i) => ({
-      id: `team-${i}`,
-      players: [],
-      isFilled: false
-    }));
-  });
-
-  // Dialog and action states
-  const [swapDialogOpen, setSwapDialogOpen] = useState(false);
-  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
-  const [selectedTeamIndex, setSelectedTeamIndex] = useState<number | null>(null);
-
-  // Handle joining game
-  const handleJoinGame = async () => {
-    if (selectedSlot === null || !userId) return;
-
-    const supabase = createClient();
-    const { error } = await supabase
-      .from('game_slots')
-      .insert({
-        game_id: game.id,
-        slot_index: selectedSlot,
-        player_id: userId
-      });
-
-    if (error) {
-      console.error('Error joining game:', error);
-      return;
-    }
-
-    setJoinDialogOpen(false);
-    router.refresh();
-  };
 
   // Handle game status changes
   const handleStartGame = () => {
@@ -136,55 +40,6 @@ export default function Game({ game, userId, gameSlots }: GameProps) {
 
   const handleEndGame = () => {
     // TODO: Implement game end logic with server action
-  };
-
-  // Team management actions
-  const handleSwapTeam = (fromIndex: number, toIndex: number) => {
-    const newTeams = [...teams];
-    const temp = newTeams[fromIndex];
-    newTeams[fromIndex] = newTeams[toIndex];
-    newTeams[toIndex] = temp;
-    setTeams(newTeams);
-    setSwapDialogOpen(false);
-  };
-
-  const handleMoveTeam = (fromIndex: number, toIndex: number) => {
-    if (fromIndex !== toIndex) {
-      const newTeams = [...teams];
-      const movingTeam = { ...newTeams[fromIndex] };
-      newTeams[fromIndex] = {
-        id: `team-${fromIndex}`,
-        players: [],
-        isFilled: false
-      };
-      newTeams[toIndex] = movingTeam;
-      setTeams(newTeams);
-      setMoveDialogOpen(false);
-    }
-  };
-
-  const handleRemoveTeam = (index: number) => {
-    const newTeams = [...teams];
-    newTeams[index] = {
-      id: `team-${index}`,
-      players: [],
-      isFilled: false
-    };
-    setTeams(newTeams);
-  };
-
-  const getPlatformIcon = (platform: string) => {
-    switch (platform.toLowerCase()) {
-      case 'pc':
-        return <Monitor className="h-4 w-4" />;
-      case 'xbox':
-      case 'playstation':
-        return <Gamepad2 className="h-4 w-4" />;
-      case 'mobile':
-        return <Smartphone className="h-4 w-4" />;
-      default:
-        return <Gamepad2 className="h-4 w-4" />;
-    }
   };
 
   const getStatusIndicator = (status: GameStatus) => {
@@ -215,9 +70,6 @@ export default function Game({ game, userId, gameSlots }: GameProps) {
     }
   };
 
-  const filledTeams = teams.filter(team => team.isFilled);
-  const emptyTeams = teams.filter(team => !team.isFilled);
-
   return (
     <div className="min-h-screen bg-gaming-darker text-white pt-20 pb-12">
       <div className="container mx-auto px-4">
@@ -236,51 +88,25 @@ export default function Game({ game, userId, gameSlots }: GameProps) {
               {heroMode && (
                 <>
                   {game.status === "open" && (
-                    <Button
-                      variant="default"
-                      size="sm"
-                      className="bg-green-600 hover:bg-green-700"
+                    <button
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md flex items-center gap-2"
                       onClick={handleStartGame}
                     >
-                      <PlayCircle className="h-4 w-4 mr-1" />
+                      <PlayCircle className="h-4 w-4" />
                       Start Match
-                    </Button>
+                    </button>
                   )}
 
                   {game.status === "live" && (
-                    <Button
-                      variant="default"
-                      size="sm"
-                      className="bg-red-600 hover:bg-red-700"
+                    <button
+                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md flex items-center gap-2"
                       onClick={handleEndGame}
                     >
-                      <StopCircle className="h-4 w-4 mr-1" />
+                      <StopCircle className="h-4 w-4" />
                       End Match
-                    </Button>
-                  )}
-
-                  {game.status === "completed" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => router.push('/host-game')}
-                    >
-                      Host New Match
-                    </Button>
+                    </button>
                   )}
                 </>
-              )}
-
-              {/* Join game button for non-hosts */}
-              {!heroMode && game.status === "open" && (
-                <Button
-                  variant="default"
-                  size="sm"
-                  className="bg-blue-600 hover:bg-blue-700"
-                  onClick={() => setJoinDialogOpen(true)}
-                >
-                  Join Game
-                </Button>
               )}
             </div>
           </div>
@@ -288,448 +114,16 @@ export default function Game({ game, userId, gameSlots }: GameProps) {
 
         {/* Game info and host section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {/* Host details card */}
-          <Card className="border-pubg/20 bg-gaming-light hover:border-pubg/40 transition-colors md:order-1">
-            <CardHeader className="pb-2 border-b border-gaming-darker/30">
-              <CardTitle className="text-base text-white flex items-center gap-2">
-                <UserRound className="h-5 w-5 text-pubg" />
-                Host Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="p-4 bg-gradient-to-b from-gaming-darker/5 to-gaming-darker/15">
-                <div className="flex flex-col items-center gap-4">
-                  <Avatar className="h-20 w-20 border-2 border-pubg ring-2 ring-pubg/30 ring-offset-2 ring-offset-gaming-darker">
-                    <AvatarImage src={game.host.avatar_url} alt={game.host.name} />
-                    <AvatarFallback className="bg-pubg text-white">{game.host.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                  <div className="text-center">
-                    <p className="font-bold text-xl text-white">{game.host.name}</p>
-                    <Badge variant="outline" className="mt-2 bg-gaming-darker/40 border-pubg/40 text-pubg">
-                      Host
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Match details card */}
-          <Card className="border-pubg/20 bg-gaming-light md:col-span-2 hover:border-pubg/40 transition-colors md:order-2">
-            <CardHeader className="pb-2 border-b border-gaming-darker/30">
-              <CardTitle className="text-base text-white flex items-center gap-2">
-                <Globe className="h-5 w-5 text-pubg" />
-                Match Overview
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-gaming-darker/30 p-3 rounded-md">
-                  <p className="text-xs text-gray-400 mb-1">Game Mode</p>
-                  <div className="flex items-center gap-1.5">
-                    <Users className="h-4 w-4 text-pubg" />
-                    <p className="text-white font-medium">{game.match_type}</p>
-                  </div>
-                </div>
-
-                <div className="bg-gaming-darker/30 p-3 rounded-md">
-                  <p className="text-xs text-gray-400 mb-1">Platform</p>
-                  <div className="flex items-center gap-1.5">
-                    {getPlatformIcon(game.platform)}
-                    <p className="text-white font-medium">{game.platform}</p>
-                  </div>
-                </div>
-
-                <div className="bg-gaming-darker/30 p-3 rounded-md">
-                  <p className="text-xs text-gray-400 mb-1">Map</p>
-                  <div className="flex items-center gap-1.5">
-                    <MapPin className="h-4 w-4 text-pubg" />
-                    <p className="text-white font-medium">{game.map_name}</p>
-                  </div>
-                </div>
-
-                <div className="bg-gaming-darker/30 p-3 rounded-md">
-                  <p className="text-xs text-gray-400 mb-1">Perspective</p>
-                  <div className="flex items-center gap-1.5">
-                    <User className="h-4 w-4 text-pubg" />
-                    <p className="text-white font-medium">{game.game_mode.toUpperCase()}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center mt-4 bg-gaming-darker/20 p-3 rounded-md">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="h-4 w-4 text-pubg" />
-                    <p className="text-sm text-white">Created {new Date(game.created_at).toLocaleString()}</p>
-                  </div>
-                </div>
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                  <div className="flex items-center gap-1.5">
-                    <Users className="h-4 w-4 text-pubg" />
-                    <p className="text-sm text-white">Players Joined <strong className="ml-2">0 / 100</strong></p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <HostInfo host={game.host} />
+          <GameOverview game={game} />
         </div>
 
         {/* Teams section */}
-        <div className="mb-6">
-          <pre>{JSON.stringify(gameSlots, null, 2)}</pre>
-          <h2 className="text-xl font-bold mb-4">Teams</h2>
-
-          <div className={`grid gap-3 ${game.match_type === 'solo' ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8' :
-            game.match_type === 'duo' ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' :
-              'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
-            }`}>
-            {teams.map((team, index) => (
-              <TeamCard
-                key={team.id}
-                team={team}
-                mode={game.match_type}
-                teamNumber={index + 1}
-                heroMode={heroMode}
-                onSelectTeam={() => setSelectedTeamIndex(index)}
-                onSwapTeam={() => {
-                  setSelectedTeamIndex(index);
-                  setSwapDialogOpen(true);
-                }}
-                onMoveTeam={() => {
-                  setSelectedTeamIndex(index);
-                  setMoveDialogOpen(true);
-                }}
-                onRemoveTeam={() => handleRemoveTeam(index)}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Swap Team Dialog */}
-        <Dialog open={swapDialogOpen} onOpenChange={setSwapDialogOpen}>
-          <DialogContent className="bg-gaming-light border-pubg/30 max-w-md max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-white">Swap Team Position</DialogTitle>
-              <DialogDescription className="text-gray-400">
-                Select a team to swap positions with Team {selectedTeamIndex !== null ? selectedTeamIndex + 1 : ''}
-              </DialogDescription>
-            </DialogHeader>
-
-            {filledTeams.length > 1 ? (
-              <div className="grid gap-2 py-4">
-                {filledTeams.map((team) => {
-                  const indexInOriginalArray = teams.findIndex(t => t.id === team.id);
-                  if (indexInOriginalArray === selectedTeamIndex) return null;
-
-                  return (
-                    <Button
-                      key={team.id}
-                      variant="outline"
-                      className="justify-start h-auto py-3 hover:bg-gaming-darker/30"
-                      onClick={() => handleSwapTeam(selectedTeamIndex!, indexInOriginalArray)}
-                    >
-                      <div className="flex items-center w-full">
-                        <div className="bg-pubg/20 text-white rounded px-2 py-1 mr-3">
-                          Team {indexInOriginalArray + 1}
-                        </div>
-                        <div className="flex-1 flex items-center gap-2">
-                          {team.players.map(player => (
-                            <Avatar key={player.id} className="h-6 w-6 border border-pubg/30">
-                              <AvatarImage src={player.avatarUrl} alt={player.name} />
-                              <AvatarFallback>{player.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                            </Avatar>
-                          ))}
-                        </div>
-                        <ArrowRightLeft className="h-4 w-4 text-gray-400" />
-                      </div>
-                    </Button>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center py-6 text-center">
-                <CircleDashed className="h-12 w-12 text-gray-500 mb-2" />
-                <p className="text-gray-400">No other teams available to swap with</p>
-              </div>
-            )}
-
-            <DialogClose asChild>
-              <Button variant="outline" className="w-full">Cancel</Button>
-            </DialogClose>
-          </DialogContent>
-        </Dialog>
-
-        {/* Move Team Dialog */}
-        <Dialog open={moveDialogOpen} onOpenChange={setMoveDialogOpen}>
-          <DialogContent className="bg-gaming-light border-pubg/30 max-w-md max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-white">Move Team</DialogTitle>
-              <DialogDescription className="text-gray-400">
-                Select an empty slot to move Team {selectedTeamIndex !== null ? selectedTeamIndex + 1 : ''}
-              </DialogDescription>
-            </DialogHeader>
-
-            {emptyTeams.length > 0 ? (
-              <div className="grid gap-2 py-4">
-                {emptyTeams.map((team) => {
-                  const indexInOriginalArray = teams.findIndex(t => t.id === team.id);
-
-                  return (
-                    <Button
-                      key={team.id}
-                      variant="outline"
-                      className="justify-start h-auto py-3 hover:bg-gaming-darker/30"
-                      onClick={() => handleMoveTeam(selectedTeamIndex!, indexInOriginalArray)}
-                    >
-                      <div className="flex items-center w-full">
-                        <div className="bg-gaming-darker/50 text-gray-300 rounded px-2 py-1 mr-3">
-                          Slot {indexInOriginalArray + 1}
-                        </div>
-                        <div className="flex-1 flex items-center">
-                          <span className="text-gray-400">Empty position</span>
-                        </div>
-                        <MoveRight className="h-4 w-4 text-gray-400" />
-                      </div>
-                    </Button>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center py-6 text-center">
-                <CircleDashed className="h-12 w-12 text-gray-500 mb-2" />
-                <p className="text-gray-400">No empty slots available</p>
-              </div>
-            )}
-
-            <DialogClose asChild>
-              <Button variant="outline" className="w-full">Cancel</Button>
-            </DialogClose>
-          </DialogContent>
-        </Dialog>
-
-        {/* Join Game Dialog */}
-        <Dialog open={joinDialogOpen} onOpenChange={setJoinDialogOpen}>
-          <DialogContent className="bg-gaming-light border-pubg/30 max-w-md max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-white">Join Game</DialogTitle>
-              <DialogDescription className="text-gray-400">
-                To join this game, follow these steps:
-                <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li>Go to PUBG Custom Match settings</li>
-                  <li>Enter the game password when prompted</li>
-                  <li>Select your preferred slot from the available options below</li>
-                </ul>
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="grid gap-2 py-4">
-              {Array.from({ length: 100 }, (_, i) => {
-                const isSlotTaken = gameSlots.some(slot => slot.slot_index === i && slot.players.length === 0);
-                return (
-                  <Button
-                    key={i}
-                    variant="outline"
-                    className={`justify-start h-auto py-3 hover:bg-gaming-darker/30 ${isSlotTaken ? 'opacity-50 cursor-not-allowed' : ''
-                      }`}
-                    disabled={isSlotTaken}
-                    onClick={() => setSelectedSlot(i)}
-                  >
-                    <div className="flex items-center w-full">
-                      <div className={`rounded px-2 py-1 mr-3 ${isSlotTaken ? 'bg-red-500/20 text-red-400' : 'bg-pubg/20 text-white'
-                        }`}>
-                        Slot {i + 1}
-                      </div>
-                      <div className="flex-1 flex items-center">
-                        <span className="text-gray-400">
-                          {isSlotTaken ? 'Taken' : 'Available'}
-                        </span>
-                      </div>
-                      {selectedSlot === i && (
-                        <CircleDot className="h-4 w-4 text-green-400" />
-                      )}
-                    </div>
-                  </Button>
-                );
-              })}
-            </div>
-
-            <div className="flex gap-2">
-              <DialogClose asChild>
-                <Button variant="outline" className="flex-1">Cancel</Button>
-              </DialogClose>
-              <Button
-                variant="default"
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
-                onClick={handleJoinGame}
-                disabled={selectedSlot === null}
-              >
-                Confirm
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Teams
+          matchType={game.match_type}
+          heroMode={heroMode}
+        />
       </div>
     </div>
   );
 }
-
-// Component for rendering a team card
-const TeamCard = ({
-  team,
-  mode,
-  teamNumber,
-  heroMode,
-  onSelectTeam,
-  onSwapTeam,
-  onMoveTeam,
-  onRemoveTeam
-}: {
-  team: Team;
-  mode: string;
-  teamNumber: number;
-  heroMode: boolean;
-  onSelectTeam: () => void;
-  onSwapTeam: () => void;
-  onMoveTeam: () => void;
-  onRemoveTeam: () => void;
-}) => {
-  return (
-    <Card className={`border-pubg/10 relative ${team.isFilled ? 'bg-gaming-light' : 'bg-gaming-darker/60 border-dashed border-muted'} overflow-hidden`}>
-      <CardHeader className="py-2 px-3 bg-gaming-darker/50 flex flex-row justify-between items-center">
-        <CardTitle className="text-sm text-white">Team {teamNumber}</CardTitle>
-        {!team.isFilled ? (
-          <Badge variant="outline" className="text-xs border-gaming-light/40 text-gray-400">
-            Empty
-          </Badge>
-        ) : heroMode && (
-          <DropdownMenu>
-            <DropdownMenuTrigger className="h-6 w-6 rounded-full hover:bg-gaming-darker/50 flex items-center justify-center">
-              <MoreVertical className="h-4 w-4 text-gray-400" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-gaming-darker border-pubg/20 text-white">
-              <DropdownMenuItem className="hover:bg-gaming-light/20 cursor-pointer" onClick={onSwapTeam}>
-                <ArrowRightLeft className="h-4 w-4 mr-2" />
-                Swap Position
-              </DropdownMenuItem>
-              <DropdownMenuItem className="hover:bg-gaming-light/20 cursor-pointer" onClick={onMoveTeam}>
-                <MoveRight className="h-4 w-4 mr-2" />
-                Move to Empty Slot
-              </DropdownMenuItem>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <DropdownMenuItem
-                    className="hover:bg-red-900/30 text-red-400 cursor-pointer"
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      onSelectTeam();
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Remove Team
-                  </DropdownMenuItem>
-                </AlertDialogTrigger>
-                <AlertDialogContent className="bg-gaming-light border-pubg/30">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className="text-white">Remove Team</AlertDialogTitle>
-                    <AlertDialogDescription className="text-gray-400">
-                      Are you sure you want to remove <strong>Team {teamNumber}</strong>? This action cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel className="bg-transparent text-white border-gaming-light/30 hover:bg-gaming-darker/50">Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      className="bg-red-700 text-white hover:bg-red-800"
-                      onClick={onRemoveTeam}
-                    >
-                      Remove
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-      </CardHeader>
-      <CardContent className="p-0">
-        {team.isFilled ? (
-          <div className={`${mode === 'squad' ? 'grid grid-cols-2 gap-px bg-gaming-darker/30' : ''}`}>
-            {team.players.map((player) => (
-              <PlayerCard key={player.id} player={player} mode={mode} />
-            ))}
-          </div>
-        ) : (
-          <div className="p-4 flex flex-col items-center justify-center space-y-2 text-center">
-            <CircleDashed className="h-6 w-6 text-gray-500 animate-pulse" />
-            <p className="text-xs text-gray-400">Waiting</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-};
-
-// Component for rendering a player card
-const PlayerCard = ({ player }: { player: Player; mode: string }) => {
-  return (
-    <HoverCard>
-      <HoverCardTrigger asChild>
-        <a
-          href={`https://twitch.tv/${player.twitchName}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block"
-        >
-          <div className="p-2 bg-gaming-light cursor-pointer hover:bg-pubg/10 transition-colors">
-            <PlayerCardContent player={player} />
-          </div>
-        </a>
-      </HoverCardTrigger>
-      <HoverCardContent className="w-80 bg-gaming-darker border-pubg/20 p-0 overflow-hidden">
-        <div className="p-4">
-          <div className="flex items-center gap-3 mb-2">
-            <Avatar className="h-10 w-10 border-2 border-pubg">
-              <AvatarImage src={player.avatarUrl} alt={player.name} />
-              <AvatarFallback className="bg-pubg text-white">{player.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="font-medium text-white">{player.name}</p>
-              <p className="text-xs text-purple-300 flex items-center gap-1">
-                <Twitch className="h-3 w-3" />
-                {player.twitchName}
-              </p>
-            </div>
-          </div>
-          <Button
-            variant="default"
-            className="w-full bg-[#9146FF] hover:bg-[#7E69AB] text-white"
-            onClick={() => window.open(`https://twitch.tv/${player.twitchName}`, '_blank')}
-          >
-            <Twitch className="h-4 w-4 mr-2" />
-            Watch Stream
-          </Button>
-        </div>
-      </HoverCardContent>
-    </HoverCard>
-  );
-};
-
-// Reusable component for player card content
-const PlayerCardContent = ({ player }: { player: Player }) => {
-  return (
-    <div className="flex items-center gap-2">
-      <Avatar className="h-6 w-6 border border-purple-400">
-        <AvatarImage src={player.avatarUrl} alt={player.name} />
-        <AvatarFallback className="text-[10px]">{player.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-      </Avatar>
-      <div className="overflow-hidden">
-        <p className="text-xs text-white truncate">{player.name}</p>
-        <p className="text-[10px] text-purple-300 flex items-center gap-0.5 truncate">
-          <Twitch className="h-2.5 w-2.5" />
-          {player.twitchName}
-        </p>
-      </div>
-    </div>
-  );
-};
-

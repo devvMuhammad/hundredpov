@@ -93,7 +93,7 @@ export const MatchCard = ({ match, type }: { match: Game, type: string }) => {
 
               <div className="flex items-center text-gray-300">
                 <User className="h-3.5 w-3.5 mr-1.5 text-pubg" />
-                <span>{match.host.name}</span>
+                {/* <span>{match.host.name}</span> */}
               </div>
             </div>
 
