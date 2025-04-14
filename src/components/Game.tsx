@@ -491,7 +491,7 @@ const TeamCard = ({
   onRemoveTeam: () => void;
 }) => {
   return (
-    <Card className={`border-pubg/10 relative ${team.isFilled ? 'bg-gaming-light' : 'bg-gaming-darker/60 border-dashed border-gaming-light/30'} overflow-hidden`}>
+    <Card className={`border-pubg/10 relative ${team.isFilled ? 'bg-gaming-light' : 'bg-gaming-darker/60 border-dashed border-muted'} overflow-hidden`}>
       <CardHeader className="py-2 px-3 bg-gaming-darker/50 flex flex-row justify-between items-center">
         <CardTitle className="text-sm text-white">Team {teamNumber}</CardTitle>
         {!team.isFilled ? (
