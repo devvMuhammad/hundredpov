@@ -4,7 +4,7 @@ import { Globe, Monitor, Gamepad2, Smartphone, User, MapPin, Clock, Users } from
 interface GameOverviewProps {
   game: {
     name: string;
-    description: string;
+    description?: string | null;
     map_name: string;
     platform: string;
     game_mode: string;

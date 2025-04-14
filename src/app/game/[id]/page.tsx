@@ -21,14 +21,15 @@ async function fetchGameData(gameId: string) {
       updated_at,
       host_id,
       region,
-      host:profiles!host_id(
+      host:player_info!host_id(
         id,
-        name,
+        name:twitch_username,
         avatar_url
       )`)
     .eq('id', gameId)
     .single();
 
+  console.log(game, error)
   if (error || !game) {
     redirect("/lobby");
   }
@@ -45,7 +46,7 @@ async function fetchGameData(gameId: string) {
 
   const transformedSlots = slotsData?.map(slot => ({
     slot_index: slot.slot_index,
-    players: slot.players.map(player => ({
+    players: (slot.players || []).map(player => ({
       id: player.id, // Using twitch username as ID
       name: player.pubg_username,
       twitchName: player.twitch_username,
@@ -65,7 +66,7 @@ async function fetchGameData(gameId: string) {
 
   return {
     game: transformedGame,
-    slots: transformedSlots || [],
+    slots: [],
     userId: user?.id
   };
 }

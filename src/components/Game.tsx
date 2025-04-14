@@ -10,7 +10,7 @@ type GameStatus = "open" | "live" | "completed";
 interface Game {
   id: string;
   name: string;
-  description: string;
+  description?: string | null;
   map_name: string;
   platform: string;
   game_mode: string;

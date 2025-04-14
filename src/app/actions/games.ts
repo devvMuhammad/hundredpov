@@ -30,13 +30,23 @@ export async function fetchGames(category: GameCategory): Promise<Game[]> {
   const { data: games, error } = await supabase
     .from('games')
     .select(`
-      *,
+      id,
+      name,
+      description,
+      map_name,
+      platform,
+      game_mode,
+      match_type,
+      status,
+      created_at,
+      updated_at,
+      host_id,
+      region,
       host:player_info!host_id(
         id,
         name:twitch_username,
         avatar_url
-      )
-    `)
+      )`)
     .eq('status', category)
     .order('created_at', { ascending: false });
 
@@ -45,6 +55,6 @@ export async function fetchGames(category: GameCategory): Promise<Game[]> {
     throw error;
   }
 
-  // console.log("games are", category, games.length);
+  console.log("games are", games);
   return games || [];
 } 

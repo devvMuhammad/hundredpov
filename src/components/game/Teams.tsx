@@ -2,6 +2,8 @@ import { useState } from "react";
 import { TeamCard } from "./TeamCard";
 import { SwapTeamDialog } from "./SwapTeamDialog";
 import { MoveTeamDialog } from "./MoveTeamDialog";
+import { JoinGameDialog } from "./JoinGameDialog";
+import { Button } from "@/components/ui/button";
 
 interface Player {
   id: string;
@@ -19,9 +21,11 @@ interface Team {
 interface TeamsProps {
   matchType: string;
   heroMode: boolean;
+  gameId: string;
+  userId: string | undefined;
 }
 
-export function Teams({ matchType, heroMode }: TeamsProps) {
+export function Teams({ matchType, heroMode, gameId, userId }: TeamsProps) {
   const [teams, setTeams] = useState<Team[]>(() => {
     const totalTeams = matchType === "solo" ? 100 : matchType === "duo" ? 50 : 25;
     return Array.from({ length: totalTeams }, (_, i) => ({
@@ -34,6 +38,7 @@ export function Teams({ matchType, heroMode }: TeamsProps) {
   const [selectedTeamIndex, setSelectedTeamIndex] = useState<number | null>(null);
   const [swapDialogOpen, setSwapDialogOpen] = useState(false);
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  const [joinDialogOpen, setJoinDialogOpen] = useState(false);
 
   const handleSwapTeam = (fromIndex: number, toIndex: number) => {
     const newTeams = [...teams];
@@ -71,7 +76,15 @@ export function Teams({ matchType, heroMode }: TeamsProps) {
 
   return (
     <div className="mb-6">
-      <h2 className="text-xl font-bold mb-4">Teams</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">Teams</h2>
+        <Button
+          onClick={() => setJoinDialogOpen(true)}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          Join Game
+        </Button>
+      </div>
 
       <div className={`grid gap-3 ${matchType === 'solo' ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8' :
         matchType === 'duo' ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' :
@@ -112,6 +125,13 @@ export function Teams({ matchType, heroMode }: TeamsProps) {
         selectedTeamIndex={selectedTeamIndex}
         teams={teams}
         onMoveTeam={handleMoveTeam}
+      />
+
+      <JoinGameDialog
+        open={joinDialogOpen}
+        onOpenChange={setJoinDialogOpen}
+        gameId={gameId}
+        userId={userId}
       />
     </div>
   );
