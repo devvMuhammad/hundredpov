@@ -38,6 +38,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { createClient } from "@/lib/supabase/client";
 
 // Types for our game
 // type MatchMode = "Solo" | "Duo" | "Squad";
@@ -60,6 +61,7 @@ interface Team {
 }
 
 interface Game {
+  id: string;
   name: string;
   description: string;
   map_name: string;
@@ -77,11 +79,16 @@ interface Game {
 
 interface GameProps {
   game: Game;
+  userId: string | undefined;
+  gameSlots: { slot_index: number, players: any[] }[]
 }
 
-export default function Game({ game }: GameProps) {
+export default function Game({ game, userId, gameSlots }: GameProps) {
   const router = useRouter();
-  const [heroMode] = useState(true); // Host powers enabled
+  const heroMode = userId === game.host.id;
+  const [joinDialogOpen, setJoinDialogOpen] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
+  // const [gameSlots] = useState<{ slot_index: number; player_id: string | null }[]>([]);
 
   // Mock teams data for now
   const [teams, setTeams] = useState<Team[]>(() => {
@@ -99,6 +106,28 @@ export default function Game({ game }: GameProps) {
   const [swapDialogOpen, setSwapDialogOpen] = useState(false);
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
   const [selectedTeamIndex, setSelectedTeamIndex] = useState<number | null>(null);
+
+  // Handle joining game
+  const handleJoinGame = async () => {
+    if (selectedSlot === null || !userId) return;
+
+    const supabase = createClient();
+    const { error } = await supabase
+      .from('game_slots')
+      .insert({
+        game_id: game.id,
+        slot_index: selectedSlot,
+        player_id: userId
+      });
+
+    if (error) {
+      console.error('Error joining game:', error);
+      return;
+    }
+
+    setJoinDialogOpen(false);
+    router.refresh();
+  };
 
   // Handle game status changes
   const handleStartGame = () => {
@@ -241,6 +270,18 @@ export default function Game({ game }: GameProps) {
                   )}
                 </>
               )}
+
+              {/* Join game button for non-hosts */}
+              {!heroMode && game.status === "open" && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700"
+                  onClick={() => setJoinDialogOpen(true)}
+                >
+                  Join Game
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -336,6 +377,7 @@ export default function Game({ game }: GameProps) {
 
         {/* Teams section */}
         <div className="mb-6">
+          <pre>{JSON.stringify(gameSlots, null, 2)}</pre>
           <h2 className="text-xl font-bold mb-4">Teams</h2>
 
           <div className={`grid gap-3 ${game.match_type === 'solo' ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8' :
@@ -463,6 +505,68 @@ export default function Game({ game }: GameProps) {
             <DialogClose asChild>
               <Button variant="outline" className="w-full">Cancel</Button>
             </DialogClose>
+          </DialogContent>
+        </Dialog>
+
+        {/* Join Game Dialog */}
+        <Dialog open={joinDialogOpen} onOpenChange={setJoinDialogOpen}>
+          <DialogContent className="bg-gaming-light border-pubg/30 max-w-md max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-white">Join Game</DialogTitle>
+              <DialogDescription className="text-gray-400">
+                To join this game, follow these steps:
+                <ul className="list-disc list-inside mt-2 space-y-1">
+                  <li>Go to PUBG Custom Match settings</li>
+                  <li>Enter the game password when prompted</li>
+                  <li>Select your preferred slot from the available options below</li>
+                </ul>
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="grid gap-2 py-4">
+              {Array.from({ length: 100 }, (_, i) => {
+                const isSlotTaken = gameSlots.some(slot => slot.slot_index === i && slot.players.length === 0);
+                return (
+                  <Button
+                    key={i}
+                    variant="outline"
+                    className={`justify-start h-auto py-3 hover:bg-gaming-darker/30 ${isSlotTaken ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    disabled={isSlotTaken}
+                    onClick={() => setSelectedSlot(i)}
+                  >
+                    <div className="flex items-center w-full">
+                      <div className={`rounded px-2 py-1 mr-3 ${isSlotTaken ? 'bg-red-500/20 text-red-400' : 'bg-pubg/20 text-white'
+                        }`}>
+                        Slot {i + 1}
+                      </div>
+                      <div className="flex-1 flex items-center">
+                        <span className="text-gray-400">
+                          {isSlotTaken ? 'Taken' : 'Available'}
+                        </span>
+                      </div>
+                      {selectedSlot === i && (
+                        <CircleDot className="h-4 w-4 text-green-400" />
+                      )}
+                    </div>
+                  </Button>
+                );
+              })}
+            </div>
+
+            <div className="flex gap-2">
+              <DialogClose asChild>
+                <Button variant="outline" className="flex-1">Cancel</Button>
+              </DialogClose>
+              <Button
+                variant="default"
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                onClick={handleJoinGame}
+                disabled={selectedSlot === null}
+              >
+                Confirm
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

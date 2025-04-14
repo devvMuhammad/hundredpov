@@ -10,6 +10,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
   const { data: game, error } = await supabase
     .from('games')
     .select(`
+      id,
       name,
       description,
       map_name,
@@ -21,18 +22,34 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
       updated_at,
       host_id,
       region,
-      host:profiles(
+      host:profiles!host_id(
         id,
         name,
         avatar_url
       )`)
     .eq('id', gameId)
     .single();
-  console.log("game  is here", game);
 
   if (error || !game) {
     redirect("/lobby");
   }
 
-  return <Game game={game} />;
+  const { data } = await supabase.auth.getUser();
+
+  const { data: slotsData } = await supabase
+    .from('game_slots')
+    .select('slot_index, players:player_info(twitch_username, pubg_username, platform)')
+    .eq('game_id', game.id)
+    .order('slot_index');
+
+  const transformedGame = {
+    ...game,
+    host: game.host as unknown as {
+      id: string;
+      name: string;
+      avatar_url: string;
+    }
+  }
+
+  return <Game game={transformedGame} userId={data.user?.id} gameSlots={slotsData || []} />;
 }
