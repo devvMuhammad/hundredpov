@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { TeamCard } from "./TeamCard";
 import { JoinGame } from "./JoinGame";
 
@@ -64,10 +64,11 @@ export function Teams({ matchType, heroMode, gameId, userId }: TeamsProps) {
     setTeams(newTeams);
   };
 
-  const availableSlots = teams
+
+  const availableSlots = useMemo(() => teams
     .map((team, index) => ({ index, isFilled: team.isFilled }))
     .filter(({ isFilled }) => !isFilled)
-    .map(({ index }) => index);
+    .map(({ index }) => index), [teams]);
 
   return (
     <div className="mb-6">
