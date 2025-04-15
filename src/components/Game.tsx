@@ -25,7 +25,7 @@ export default function Game({ game, userId, slots }: GameProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gaming-darker text-white pt-20 pb-12">
+    <div className="min-h-screen bg-gaming-darker text-white pt-20 md:pt-28 pb-12">
       <div className="container mx-auto px-4">
         <GameHeader
           gameName={game.name}
