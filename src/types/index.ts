@@ -24,3 +24,14 @@ export interface AuthContextType {
   user: UserProfile | null;
   signOut: () => Promise<void>;
 }
+
+
+export interface GameSlot {
+  slot_index: number;
+  players: {
+    id: string;
+    name: string;
+    twitchName: string;
+    avatarUrl: string;
+  }[];
+}

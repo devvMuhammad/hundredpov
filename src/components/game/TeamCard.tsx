@@ -15,26 +15,14 @@ import {
 import { PlayerCard } from "./PlayerCard";
 import { SwapTeam } from "./SwapTeam";
 import { MoveTeam } from "./MoveTeam";
-
-interface Player {
-  id: string;
-  name: string;
-  twitchName: string;
-  avatarUrl: string;
-}
-
-interface Team {
-  id: string;
-  players: Player[];
-  isFilled: boolean;
-}
+import { GameSlot } from "@/types";
 
 interface TeamCardProps {
-  team: Team;
+  team: GameSlot;
   mode: string;
   teamNumber: number;
   heroMode: boolean;
-  teams: Team[];
+  teams: GameSlot[];
   onSelectTeam: () => void;
   onSwapTeam: (fromIndex: number, toIndex: number) => void;
   onMoveTeam: (fromIndex: number, toIndex: number) => void;
@@ -52,11 +40,12 @@ export function TeamCard({
   onMoveTeam,
   onRemoveTeam
 }: TeamCardProps) {
+  const isFilled = team.players.length > 0;
   return (
-    <Card className={`border-pubg/10 relative ${team.isFilled ? 'bg-gaming-light' : 'bg-gaming-darker/60 border-dashed border-muted'} overflow-hidden`}>
+    <Card className={`border-pubg/10 relative ${isFilled ? 'bg-gaming-light' : 'bg-gaming-darker/60 border-dashed border-muted'} overflow-hidden`}>
       <CardHeader className="py-2 px-3 bg-gaming-darker/50 flex flex-row justify-between items-center">
         <CardTitle className="text-sm text-white">Team {teamNumber}</CardTitle>
-        {!team.isFilled ? (
+        {!isFilled ? (
           <Badge variant="outline" className="text-xs border-gaming-light/40 text-gray-400">
             Empty
           </Badge>
@@ -98,7 +87,7 @@ export function TeamCard({
         )}
       </CardHeader>
       <CardContent className="p-0">
-        {team.isFilled ? (
+        {isFilled ? (
           <div className={`${mode === 'squad' ? 'grid grid-cols-2 gap-px bg-gaming-darker/30' : ''}`}>
             {team.players.map((player) => (
               <PlayerCard key={player.id} player={player} mode={mode} />

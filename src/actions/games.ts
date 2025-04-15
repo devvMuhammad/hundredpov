@@ -34,4 +34,42 @@ export async function createGame(formData: CreateGameData) {
   }
 
   return data;
+}
+
+export type GameCategory = 'open' | 'live' | 'completed';
+
+
+export async function fetchGames(category: GameCategory) {
+  const supabase = await createClient();
+
+  const { data: games, error } = await supabase
+    .from('games')
+    .select(`
+      id,
+      name,
+      description,
+      map_name,
+      platform,
+      game_mode,
+      match_type,
+      status,
+      created_at,
+      updated_at,
+      host_id,
+      region,
+      host:player_info!host_id(
+        id,
+        name:twitch_username,
+        avatar_url
+      )`)
+    .eq('status', category)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching games:', error);
+    throw error;
+  }
+
+  console.log("games are", games);
+  return games || [];
 } 

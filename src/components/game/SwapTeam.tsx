@@ -3,29 +3,17 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Button } from "@/components/ui/button";
 import { CircleDashed, ArrowRightLeft } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-interface Player {
-  id: string;
-  name: string;
-  twitchName: string;
-  avatarUrl: string;
-}
-
-interface Team {
-  id: string;
-  players: Player[];
-  isFilled: boolean;
-}
+import { GameSlot } from "@/types";
 
 interface SwapTeamProps {
   teamIndex: number;
-  teams: Team[];
+  teams: GameSlot[];
   onSwapTeam: (fromIndex: number, toIndex: number) => void;
 }
 
 export function SwapTeam({ teamIndex, teams, onSwapTeam }: SwapTeamProps) {
   const [open, setOpen] = useState(false);
-  const filledTeams = teams.filter(team => team.isFilled);
+  const filledTeams = teams.filter(team => team.players.length > 0);
 
   return (
     <>
@@ -50,12 +38,12 @@ export function SwapTeam({ teamIndex, teams, onSwapTeam }: SwapTeamProps) {
           {filledTeams.length > 1 ? (
             <div className="grid gap-2 py-4">
               {filledTeams.map((team) => {
-                const indexInOriginalArray = teams.findIndex(t => t.id === team.id);
+                const indexInOriginalArray = teams.findIndex(t => t.slot_index === team.slot_index);
                 if (indexInOriginalArray === teamIndex) return null;
 
                 return (
                   <Button
-                    key={team.id}
+                    key={team.slot_index}
                     variant="outline"
                     className="justify-start h-auto py-3 hover:bg-gaming-darker/30"
                     onClick={() => {

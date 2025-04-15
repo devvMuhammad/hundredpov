@@ -3,7 +3,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Trophy, Clock, Timer } from "lucide-react";
 import { MatchCard } from "./lobby/MatchCard";
 import { useQuery } from "@tanstack/react-query";
-import { fetchGames, GameCategory } from "@/app/actions/games";
+import { fetchGames, GameCategory } from "@/actions/games";
 import { GameCardSkeleton } from "./lobby/GameCardSkeleton";
 import { EmptyState } from "./lobby/EmptyState";
 import { ErrorState } from "./lobby/ErrorState";

@@ -2,29 +2,18 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CircleDashed, MoveRight } from "lucide-react";
+import { GameSlot } from "@/types";
 
-interface Player {
-  id: string;
-  name: string;
-  twitchName: string;
-  avatarUrl: string;
-}
-
-interface Team {
-  id: string;
-  players: Player[];
-  isFilled: boolean;
-}
 
 interface MoveTeamProps {
   teamIndex: number;
-  teams: Team[];
+  teams: GameSlot[];
   onMoveTeam: (fromIndex: number, toIndex: number) => void;
 }
 
 export function MoveTeam({ teamIndex, teams, onMoveTeam }: MoveTeamProps) {
   const [open, setOpen] = useState(false);
-  const emptyTeams = teams.filter(team => !team.isFilled);
+  const emptyTeams = teams.filter(team => team.players.length === 0);
 
   return (
     <>
@@ -49,11 +38,11 @@ export function MoveTeam({ teamIndex, teams, onMoveTeam }: MoveTeamProps) {
           {emptyTeams.length > 0 ? (
             <div className="grid gap-2 py-4">
               {emptyTeams.map((team) => {
-                const indexInOriginalArray = teams.findIndex(t => t.id === team.id);
+                const indexInOriginalArray = teams.findIndex(t => t.slot_index === team.slot_index);
 
                 return (
                   <Button
-                    key={team.id}
+                    key={team.slot_index}
                     variant="outline"
                     className="justify-start h-auto py-3 hover:bg-gaming-darker/30"
                     onClick={() => {

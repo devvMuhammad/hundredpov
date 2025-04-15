@@ -3,7 +3,8 @@ import { HostInfo } from "./game/HostInfo";
 import { GameOverview } from "./game/GameOverview";
 import { Teams } from "./game/Teams";
 import { GameHeader } from "./game/GameHeader";
-import { GameData, GameSlot } from "@/actions/game";
+import { GameData } from "@/actions/game";
+import { GameSlot } from "@/types";
 
 interface GameProps {
   game: GameData;
@@ -11,7 +12,7 @@ interface GameProps {
   slots: GameSlot[];
 }
 
-export default function Game({ game, userId }: GameProps) {
+export default function Game({ game, userId, slots }: GameProps) {
   const isHost = userId === game.host.id;
 
   // Handle game status changes
@@ -46,6 +47,7 @@ export default function Game({ game, userId }: GameProps) {
           heroMode={isHost}
           gameId={game.id}
           userId={userId}
+          slots={slots}
         />
       </div>
     </div>

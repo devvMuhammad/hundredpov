@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { GameSlot } from "@/types";
 import { redirect } from "next/navigation";
 
 export type GameStatus = 'open' | 'live' | 'completed';
@@ -21,16 +22,6 @@ export interface GameData {
     name: string;
     avatar_url: string;
   };
-}
-
-export interface GameSlot {
-  slot_index: number;
-  players: {
-    id: string;
-    name: string;
-    twitchName: string;
-    avatarUrl: string;
-  }[];
 }
 
 export async function fetchGame(gameId: string): Promise<GameData> {
