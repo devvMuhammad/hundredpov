@@ -242,17 +242,25 @@ export default function HostGame() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className="bg-gaming-light border-gaming-darker">
-                              <SelectItem value="pc" className="text-white flex items-center gap-2">
-                                <Monitor className="h-4 w-4" /> PC
+                              <SelectItem value="pc" className="text-white">
+                                <div className="flex items-center gap-2">
+                                  <Monitor className="h-4 w-4" /> PC
+                                </div>
                               </SelectItem>
-                              <SelectItem value="xbox" className="text-white flex items-center gap-2">
-                                <Gamepad2 className="h-4 w-4" /> Xbox
+                              <SelectItem value="xbox" className="text-white">
+                                <div className="flex items-center gap-2">
+                                  <Gamepad2 className="h-4 w-4" /> Xbox
+                                </div>
                               </SelectItem>
-                              <SelectItem value="playstation" className="text-white flex items-center gap-2">
-                                <Gamepad2 className="h-4 w-4" /> PlayStation
+                              <SelectItem value="playstation" className="text-white">
+                                <div className="flex items-center gap-2">
+                                  <Gamepad2 className="h-4 w-4" /> PlayStation
+                                </div>
                               </SelectItem>
-                              <SelectItem value="mobile" className="text-white flex items-center gap-2">
-                                <Smartphone className="h-4 w-4" /> Mobile
+                              <SelectItem value="mobile" className="text-white">
+                                <div className="flex items-center gap-2">
+                                  <Smartphone className="h-4 w-4" /> Mobile
+                                </div>
                               </SelectItem>
                             </SelectContent>
                           </Select>
